@@ -16,6 +16,8 @@ The goal is to build a simple but realistic banking system to demonstrate backen
 **Testing:** JUnit (Planned)
 **API Documentation:** Swagger/OpenAI (Planned)
 
+---
+
 ## 📌 Planned Features
 - User registration and authentication (JWT)
 - Accounts with balances in **Jordan Dollar ($J)**
@@ -24,13 +26,19 @@ The goal is to build a simple but realistic banking system to demonstrate backen
 - Dockerized setup (App + PostgreSQL)
 - Swagger UI for API documentation
 
+---
+
 ## 📂 Project Structure (planned)
+```
 jjbank/
 ├─ backend/ # Spring Boot API
 ├─ frontend/ # (future) React client
 ├─ .gitignore
 ├─ LICENSE
 └─ README.md
+```
+
+---
 
 ## 🏗 Roadmap
 - [ ] Initialize Spring Boot project & DB connection

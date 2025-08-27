@@ -8,10 +8,12 @@ import java.util.Set;
 import java.util.UUID;
 
 //domain / model not managed by Spring but by JPA
+//User is a reserved word in sql, so change table name
 @Entity
+@Table(name = "users")
 public class User {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue
     private UUID id;
 
     @Column(unique = true, nullable = false)

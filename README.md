@@ -41,7 +41,7 @@ jjbank/
 ---
 
 ## 🏗 Roadmap
-- [ ] Initialize Spring Boot project & DB connection
+- [x] Initialize Spring Boot project & DB connection
 - [ ] Implement user registration and authentication (JWT)
 - [ ] Add account + transaction management
 - [ ] Setup SMTP service for register and transfer operations

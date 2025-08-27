@@ -6,6 +6,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
 
+/** Principal represents the identity of the currently authenticated user */
 public class UserPrincipal implements UserDetails {
 
     private User user;

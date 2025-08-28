@@ -29,6 +29,9 @@ public class AuthService {
     private RefreshTokenRepository refreshTokens;
 
     @Autowired
+    private AccountService accountService;
+
+    @Autowired
     private JwtService jwtService;
 
     @Autowired
@@ -45,6 +48,9 @@ public class AuthService {
         user.setPasswordHash(encoder.encode(request.password()));
         user.getRoles().add("ROLE_USER");
         users.save(user);
+
+        //create default account
+        accountService.createForUser(user);
     }
 
     @Transactional

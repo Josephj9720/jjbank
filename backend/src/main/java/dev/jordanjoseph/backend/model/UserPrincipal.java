@@ -5,6 +5,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
+import java.util.UUID;
 
 /** Principal represents the identity of the currently authenticated user */
 public class UserPrincipal implements UserDetails {
@@ -19,6 +20,8 @@ public class UserPrincipal implements UserDetails {
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return user.getRoles().stream().map(SimpleGrantedAuthority::new).toList();
     }
+
+    public UUID getId() { return user.getId(); }
 
     @Override
     public String getPassword() {

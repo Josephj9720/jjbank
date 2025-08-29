@@ -6,10 +6,10 @@ import dev.jordanjoseph.backend.model.Account;
 import dev.jordanjoseph.backend.model.User;
 import dev.jordanjoseph.backend.model.UserPrincipal;
 import dev.jordanjoseph.backend.repository.AccountRepository;
-import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.UUID;

@@ -8,12 +8,13 @@ import dev.jordanjoseph.backend.model.RefreshToken;
 import dev.jordanjoseph.backend.model.User;
 import dev.jordanjoseph.backend.repository.RefreshTokenRepository;
 import dev.jordanjoseph.backend.repository.UserRepository;
-import jakarta.transaction.Transactional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;

@@ -36,7 +36,8 @@ public class AccountValidator {
     }
 
     public void requireOwned(UUID userId) {
-        if(userId.equals(currentUserId())) {
+        if(!userId.equals(currentUserId())) {
+            System.out.println("here!");
             throw new AccessDeniedException("Not your account");
         }
     }

@@ -21,7 +21,7 @@ public class IdempotencyKey {
     private UUID id;
 
     @Column(name = "owner_id", nullable = false)
-    private UUID owner_id; //sender userId
+    private UUID ownerId; //sender userId
 
     @Column(name = "key_value", nullable = false, length = 128)
     private String keyValue;
@@ -36,12 +36,12 @@ public class IdempotencyKey {
         return createdAt;
     }
 
-    public UUID getOwner_id() {
-        return owner_id;
+    public UUID getOwnerId() {
+        return ownerId;
     }
 
-    public void setOwner_id(UUID owner_id) {
-        this.owner_id = owner_id;
+    public void setOwnerId(UUID ownerId) {
+        this.ownerId = ownerId;
     }
 
     public String getKeyValue() {

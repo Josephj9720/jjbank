@@ -5,6 +5,7 @@ import dev.jordanjoseph.backend.dto.LoginRequest;
 import dev.jordanjoseph.backend.dto.RefreshRequest;
 import dev.jordanjoseph.backend.dto.RegisterRequest;
 import dev.jordanjoseph.backend.service.AuthService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,7 +23,7 @@ public class AuthController {
 
     //need validation for email and password on register: see RegisterRequest
     @PostMapping("/register")
-    public ResponseEntity<Void> register(@RequestBody RegisterRequest request) {
+    public ResponseEntity<Void> register(@RequestBody @Valid RegisterRequest request) {
         authService.register(request);
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }

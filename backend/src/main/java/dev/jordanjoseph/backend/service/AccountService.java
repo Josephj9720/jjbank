@@ -1,0 +1,37 @@
+package dev.jordanjoseph.backend.service;
+
+import dev.jordanjoseph.backend.dto.AccountView;
+import dev.jordanjoseph.backend.model.Account;
+import dev.jordanjoseph.backend.model.User;
+import dev.jordanjoseph.backend.repository.AccountRepository;
+import dev.jordanjoseph.backend.util.AccountValidator;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+
+@Service
+public class AccountService {
+
+    @Autowired
+    private AccountRepository accountRepository;
+
+    @Autowired
+    private AccountValidator accountValidator;
+
+    @Transactional
+    public AccountView myAccount() {
+        Account account = accountValidator.getCurrentUserAccount();
+        return new AccountView(account.getId(), account.getBalance());
+    }
+
+    @Transactional
+    public void createForUser(User user) {
+        //call right after registration (MVP: one account per user)
+        if(accountRepository.findByUserId(user.getId()).isEmpty()) {
+            Account account = new Account();
+            account.setUser(user);
+            accountRepository.save(account);
+        }
+    }
+}

@@ -43,7 +43,7 @@ public class TransactionService {
         accountValidator.requireOwned(account.getUser().getId());
         accountValidator.requirePositive(amount);
         accountValidator.requireSufficientFunds(account.getBalance(), amount);
-        account.setBalance(account.getBalance().add(amount));
+        account.setBalance(account.getBalance().subtract(amount));
         return new AccountView(account.getId(), account.getBalance());
     }
 

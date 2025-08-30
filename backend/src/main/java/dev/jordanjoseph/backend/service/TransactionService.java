@@ -58,6 +58,7 @@ public class TransactionService {
         tx.setType(Transaction.Type.DEPOSIT);
         tx.setAmount(amount);
         tx.setReference("TX-" + Instant.now().toEpochMilli());
+        transactionRepository.save(tx);
 
         //record idempotency after success - if it was sent by client
         if(idemKey != null && !idemKey.isBlank()) {
@@ -89,7 +90,13 @@ public class TransactionService {
         accountValidator.requireSufficientFunds(account.getBalance(), amount);
         account.setBalance(account.getBalance().subtract(amount));
 
-        //
+        //persist transaction
+        Transaction tx = new Transaction();
+        tx.setAccount(account);
+        tx.setType(Transaction.Type.WITHDRAW);
+        tx.setAmount(amount);
+        tx.setReference("TX-" + Instant.now().toEpochMilli());
+        transactionRepository.save(tx);
 
         //record idempotence after success - if sent by client
         if(idemKey != null && !idemKey.isBlank()) {

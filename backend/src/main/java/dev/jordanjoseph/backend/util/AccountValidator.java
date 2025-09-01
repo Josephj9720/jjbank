@@ -2,13 +2,16 @@ package dev.jordanjoseph.backend.util;
 
 import dev.jordanjoseph.backend.config.AuthenticationFacade;
 import dev.jordanjoseph.backend.model.Account;
+import dev.jordanjoseph.backend.model.User;
 import dev.jordanjoseph.backend.model.UserPrincipal;
 import dev.jordanjoseph.backend.repository.AccountRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
+import java.util.Collection;
 import java.util.UUID;
 
 @Component
@@ -23,6 +26,11 @@ public class AccountValidator {
     private UUID currentUserId() {
         UserPrincipal userPrincipal = (UserPrincipal) authenticationFacade.getAuthentication().getPrincipal();
         return userPrincipal.getId();
+    }
+
+    private Collection<? extends GrantedAuthority> currentUserAuthorities() {
+        UserPrincipal userPrincipal = (UserPrincipal) authenticationFacade.getAuthentication().getPrincipal();
+        return userPrincipal.getAuthorities();
     }
 
     public Account getCurrentUserAccount() {
@@ -59,4 +67,24 @@ public class AccountValidator {
             throw new IllegalArgumentException("Amount must be >= 0.01");
         }
     }
+
+    private boolean isAdmin() {
+        return currentUserAuthorities().stream().anyMatch(a ->
+                a.getAuthority().equals("ROLE_ADMIN") || a.getAuthority().equals("ROLE_SUPER_ADMIN"));
+    }
+
+    public void requireAdmin() {
+        if(!isAdmin()) {
+            throw new AccessDeniedException("Admin Access Only");
+        }
+    }
+
+    public void requireSuperAdmin() {
+        if(currentUserAuthorities().stream().noneMatch(
+                a -> a.getAuthority().equals("ROLE_SUPER_ADMIN"))) {
+            throw new AccessDeniedException("Super Admin Access Only");
+        }
+    }
+
+
 }

@@ -13,4 +13,12 @@ import java.util.UUID;
 @Repository
 public interface TransactionRepository extends JpaRepository<Transaction, UUID> {
     List<Transaction> findByReferenceAndByAccountIdNot(String reference, UUID accountId);
+
+    Page<Transaction> findByAccountId(UUID accountId, Pageable pageable);
+
+    Page<Transaction> findByAccountIdAndType(UUID accountId, Transaction.Type type, Pageable pageable);
+
+    Page<Transaction> findByAccountIdAndCreatedAtBetween(UUID accountId, Instant from, Instant to, Pageable pageable);
+
+    Page<Transaction> findByAccountIdAndTypeAndCreatedAtBetween(UUID accountId, Transaction.Type type, Instant from, Instant to, Pageable pageable);
 }

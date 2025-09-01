@@ -1,9 +1,9 @@
 package dev.jordanjoseph.backend.service;
 
-import dev.jordanjoseph.backend.dto.AuthResponse;
-import dev.jordanjoseph.backend.dto.LoginRequest;
-import dev.jordanjoseph.backend.dto.RefreshRequest;
-import dev.jordanjoseph.backend.dto.RegisterRequest;
+import dev.jordanjoseph.backend.dto.authentication.AuthResponse;
+import dev.jordanjoseph.backend.dto.authentication.LoginRequest;
+import dev.jordanjoseph.backend.dto.authentication.RefreshRequest;
+import dev.jordanjoseph.backend.dto.authentication.RegisterRequest;
 import dev.jordanjoseph.backend.model.RefreshToken;
 import dev.jordanjoseph.backend.model.User;
 import dev.jordanjoseph.backend.repository.RefreshTokenRepository;

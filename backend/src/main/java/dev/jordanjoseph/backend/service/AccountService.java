@@ -1,6 +1,6 @@
 package dev.jordanjoseph.backend.service;
 
-import dev.jordanjoseph.backend.dto.AccountView;
+import dev.jordanjoseph.backend.dto.account.AccountView;
 import dev.jordanjoseph.backend.model.Account;
 import dev.jordanjoseph.backend.model.User;
 import dev.jordanjoseph.backend.repository.AccountRepository;

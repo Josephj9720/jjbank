@@ -1,4 +1,4 @@
-package dev.jordanjoseph.backend.dto;
+package dev.jordanjoseph.backend.dto.authentication;
 
 //need validation for email and password on register: see AuthService /register
 public record RegisterRequest(

@@ -1,4 +1,4 @@
-package dev.jordanjoseph.backend.dto;
+package dev.jordanjoseph.backend.dto.transfer;
 
 import java.math.BigDecimal;
 import java.util.UUID;

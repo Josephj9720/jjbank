@@ -1,8 +1,8 @@
 package dev.jordanjoseph.backend.service;
 
-import dev.jordanjoseph.backend.dto.AccountView;
-import dev.jordanjoseph.backend.dto.TransferRequest;
-import dev.jordanjoseph.backend.dto.TransferResponse;
+import dev.jordanjoseph.backend.dto.account.AccountView;
+import dev.jordanjoseph.backend.dto.transfer.TransferRequest;
+import dev.jordanjoseph.backend.dto.transfer.TransferResponse;
 import dev.jordanjoseph.backend.model.Account;
 import dev.jordanjoseph.backend.model.IdempotencyKey;
 import dev.jordanjoseph.backend.model.Transaction;

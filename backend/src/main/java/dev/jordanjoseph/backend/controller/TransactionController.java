@@ -1,7 +1,7 @@
 package dev.jordanjoseph.backend.controller;
 
-import dev.jordanjoseph.backend.dto.TransferRequest;
-import dev.jordanjoseph.backend.dto.TransferResponse;
+import dev.jordanjoseph.backend.dto.transfer.TransferRequest;
+import dev.jordanjoseph.backend.dto.transfer.TransferResponse;
 import dev.jordanjoseph.backend.model.Transaction;
 import dev.jordanjoseph.backend.service.TransactionService;
 import jakarta.validation.Valid;

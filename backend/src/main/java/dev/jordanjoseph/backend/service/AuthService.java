@@ -45,6 +45,7 @@ public class AuthService {
     public void register(RegisterRequest request) {
         if(users.findByEmail(request.email()).isPresent()) throw new IllegalArgumentException("Email already used!");
         User user = new User();
+        user.setFullName(request.fullName());
         user.setEmail(request.email());
         user.setPasswordHash(encoder.encode(request.password()));
         user.getRoles().add("ROLE_USER");

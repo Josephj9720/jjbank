@@ -44,7 +44,7 @@ public class AccountValidator {
     }
 
     public void requireOwned(UUID userId) {
-        if(!userId.equals(currentUserId())) {
+        if(!userId.equals(currentUserId()) || isAdmin()) {
             System.out.println("here!");
             throw new AccessDeniedException("Not your account");
         }

@@ -1,9 +1,10 @@
 package dev.jordanjoseph.backend.service;
 
-import dev.jordanjoseph.backend.dto.AuthResponse;
-import dev.jordanjoseph.backend.dto.LoginRequest;
-import dev.jordanjoseph.backend.dto.RefreshRequest;
-import dev.jordanjoseph.backend.dto.RegisterRequest;
+import dev.jordanjoseph.backend.dto.authentication.AuthResponse;
+import dev.jordanjoseph.backend.dto.authentication.LoginRequest;
+import dev.jordanjoseph.backend.dto.authentication.RefreshRequest;
+import dev.jordanjoseph.backend.dto.authentication.RegisterRequest;
+
 import dev.jordanjoseph.backend.model.RefreshToken;
 import dev.jordanjoseph.backend.model.User;
 import dev.jordanjoseph.backend.repository.RefreshTokenRepository;
@@ -45,6 +46,7 @@ public class AuthService {
     public void register(RegisterRequest request) {
         if(users.findByEmail(request.email()).isPresent()) throw new IllegalArgumentException("Email already used!");
         User user = new User();
+        user.setFullName(request.fullName());
         user.setEmail(request.email());
         user.setPasswordHash(encoder.encode(request.password()));
         user.getRoles().add("ROLE_USER");

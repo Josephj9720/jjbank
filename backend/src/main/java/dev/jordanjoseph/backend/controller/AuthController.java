@@ -1,9 +1,10 @@
 package dev.jordanjoseph.backend.controller;
 
-import dev.jordanjoseph.backend.dto.AuthResponse;
-import dev.jordanjoseph.backend.dto.LoginRequest;
-import dev.jordanjoseph.backend.dto.RefreshRequest;
-import dev.jordanjoseph.backend.dto.RegisterRequest;
+import dev.jordanjoseph.backend.dto.authentication.AuthResponse;
+import dev.jordanjoseph.backend.dto.authentication.LoginRequest;
+import dev.jordanjoseph.backend.dto.authentication.RefreshRequest;
+import dev.jordanjoseph.backend.dto.authentication.RegisterRequest;
+
 import dev.jordanjoseph.backend.service.AuthService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;

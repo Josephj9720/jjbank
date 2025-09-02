@@ -16,6 +16,9 @@ public class User {
     @GeneratedValue
     private UUID id;
 
+    @Column(nullable = false, name = "full_name")
+    private String fullName;
+
     @Column(unique = true, nullable = false)
     private String email;
 
@@ -43,6 +46,14 @@ public class User {
 
     public void setRoles(Set<String> roles) {
         this.roles = roles;
+    }
+
+    public String getFullName() {
+        return fullName;
+    }
+
+    public void setFullName(String fullName) {
+        this.fullName = fullName;
     }
 
     public String getEmail() {

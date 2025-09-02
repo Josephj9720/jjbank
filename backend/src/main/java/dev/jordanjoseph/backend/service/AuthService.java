@@ -4,6 +4,7 @@ import dev.jordanjoseph.backend.dto.authentication.AuthResponse;
 import dev.jordanjoseph.backend.dto.authentication.LoginRequest;
 import dev.jordanjoseph.backend.dto.authentication.RefreshRequest;
 import dev.jordanjoseph.backend.dto.authentication.RegisterRequest;
+
 import dev.jordanjoseph.backend.model.RefreshToken;
 import dev.jordanjoseph.backend.model.User;
 import dev.jordanjoseph.backend.repository.RefreshTokenRepository;

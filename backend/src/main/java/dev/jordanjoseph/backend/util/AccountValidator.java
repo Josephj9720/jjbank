@@ -2,16 +2,18 @@ package dev.jordanjoseph.backend.util;
 
 import dev.jordanjoseph.backend.config.AuthenticationFacade;
 import dev.jordanjoseph.backend.model.Account;
-import dev.jordanjoseph.backend.model.User;
+
 import dev.jordanjoseph.backend.model.UserPrincipal;
 import dev.jordanjoseph.backend.repository.AccountRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
+
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.util.Collection;
+
 import java.util.UUID;
 
 @Component
@@ -44,6 +46,7 @@ public class AccountValidator {
     }
 
     public void requireOwned(UUID userId) {
+
         if(!userId.equals(currentUserId()) || isAdmin()) {
             System.out.println("here!");
             throw new AccessDeniedException("Not your account");
@@ -85,6 +88,5 @@ public class AccountValidator {
             throw new AccessDeniedException("Super Admin Access Only");
         }
     }
-
 
 }

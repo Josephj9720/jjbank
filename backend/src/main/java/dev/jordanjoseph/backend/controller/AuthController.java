@@ -4,6 +4,7 @@ import dev.jordanjoseph.backend.dto.authentication.AuthResponse;
 import dev.jordanjoseph.backend.dto.authentication.LoginRequest;
 import dev.jordanjoseph.backend.dto.authentication.RefreshRequest;
 import dev.jordanjoseph.backend.dto.authentication.RegisterRequest;
+
 import dev.jordanjoseph.backend.service.AuthService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;

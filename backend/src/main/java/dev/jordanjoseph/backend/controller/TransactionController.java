@@ -2,6 +2,7 @@ package dev.jordanjoseph.backend.controller;
 
 import dev.jordanjoseph.backend.dto.transfer.TransferRequest;
 import dev.jordanjoseph.backend.dto.transfer.TransferResponse;
+
 import dev.jordanjoseph.backend.model.Transaction;
 import dev.jordanjoseph.backend.service.TransactionService;
 import jakarta.validation.Valid;
@@ -17,7 +18,7 @@ public class TransactionController {
 
     @Autowired
     private TransactionService transactionService;
-    
+
     //putting it here allows for extension with future support for multiple accounts per user
     @PostMapping("/transactions/transfer")
     public ResponseEntity<TransferResponse> transfer(

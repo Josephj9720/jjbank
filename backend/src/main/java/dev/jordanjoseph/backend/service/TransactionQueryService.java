@@ -17,6 +17,8 @@ import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
+import static java.lang.System.*;
+
 @Service
 public class TransactionQueryService {
 
@@ -61,7 +63,7 @@ public class TransactionQueryService {
                             t.getId(), t.getType(), t.getAmount(), t.getReference(), t.getCreatedAt());
 
             case TRANSFER_IN -> {
-                Transaction sender = getComplementaryTransaction(t.getReference(), t.getId());
+                Transaction sender = getComplementaryTransaction(t.getReference(), t.getAccount().getId());
                 yield new TransferInTransactionView(
                         t.getId(),
                         t.getType(),
@@ -75,7 +77,7 @@ public class TransactionQueryService {
             }
 
             case TRANSFER_OUT -> {
-                Transaction recipient = getComplementaryTransaction(t.getReference(), t.getId());
+                Transaction recipient = getComplementaryTransaction(t.getReference(), t.getAccount().getId());
                 yield new TransferOutTransactionView(
                         t.getId(),
                         t.getType(),
@@ -90,9 +92,14 @@ public class TransactionQueryService {
         };
     }
 
-    private Transaction getComplementaryTransaction(String reference, UUID transactionId) {
+    private Transaction getComplementaryTransaction(String reference, UUID accountId) {
         List<Transaction> transactions = transactionRepository
-                .findByReferenceAndAccountIdNot(reference, transactionId);
+                .findByReferenceAndAccountIdNot(reference, accountId);
+
+        for(Transaction transaction : transactions) {
+            System.out.println(transaction.getType());
+            out.println(transaction.getId());
+        }
 
         if(transactions.isEmpty()) {
             throw new IllegalStateException("No complementary transaction found");

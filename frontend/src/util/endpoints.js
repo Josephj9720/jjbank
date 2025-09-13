@@ -1,5 +1,4 @@
-export const ENDPOINTS = {
-  HOME: "/",
+export const API_ENDPOINTS = {
   AUTH : "/auth",
   ACCOUNTS : "/accounts",
   TRANSACTIONS : "/transactions",

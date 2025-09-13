@@ -1,14 +1,15 @@
 import { Routes, Route } from 'react-router';
-import { ENDPOINTS } from '../util/endpoints';
+import { FRONT_END_ROUTES } from '../util/routes';
 
 function Router() {
   return (
     <Routes>
-      <Route path={ENDPOINTS.HOME} element={<p>home</p>}/>
-      <Route path={ENDPOINTS.AUTH} element={<p>auth</p>}/>
-      <Route path={ENDPOINTS.ACCOUNTS} element={<p>accounts</p>}/>
-      <Route path={ENDPOINTS.TRANSACTIONS} element={<p>transactions</p>}/>
-      <Route path={ENDPOINTS.TRANSFERS} element={<p>transfer</p>}/>
+      <Route path={FRONT_END_ROUTES.HOME} element={<p>home</p>}/>
+      <Route path={FRONT_END_ROUTES.LOGIN} element={<p>login</p>}/>
+      <Route path={FRONT_END_ROUTES.REGISTER} element={<p>register</p>}/>
+      <Route path={FRONT_END_ROUTES.DASHBOARD} element={<p>dashboard</p>}/>
+      <Route path={FRONT_END_ROUTES.ACCOUNTS} element={<p>accounts</p>}/>
+      <Route path={FRONT_END_ROUTES.TRANSFER} element={<p>transfer</p>}/>
     </Routes>
   );
 }

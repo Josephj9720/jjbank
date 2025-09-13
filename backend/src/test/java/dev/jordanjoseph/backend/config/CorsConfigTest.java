@@ -24,7 +24,7 @@ public class CorsConfigTest {
     @Test
     void optionsPreflight_fromAllowedOrigin_returnsCorsHeader() throws Exception {
         mockMvc
-                .perform(options("/health")
+                .perform(options("/api/health")
                         .header("Origin", "http://localhost:5173")
                         .header("Access-Control-Request-Method", "GET"))
                 .andExpect(status().isOk())
@@ -36,7 +36,7 @@ public class CorsConfigTest {
     @Test
     void optionsPreflight_fromDisallowedOrigin_returns403() throws Exception {
         mockMvc
-                .perform(options("/health")
+                .perform(options("/api/health")
                         .header("Origin", "http://notallowed.com")
                         .header("Access-Control-Request-Method", "GET"))
                 .andExpect(status().isForbidden())
@@ -46,7 +46,7 @@ public class CorsConfigTest {
     @Test
     void actualGet_fromAllowedOrigin_hasCorsAllowOriginHeader() throws Exception {
         mockMvc
-                .perform(get("/health")
+                .perform(get("/api/health")
                         .header("Origin", "http://localhost:5173")
                         .header("Access-Control-Request-Method", "GET"))
                 .andExpect(status().isOk())

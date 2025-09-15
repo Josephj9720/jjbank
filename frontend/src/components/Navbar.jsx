@@ -9,7 +9,6 @@ export default function Navbar() {
             
           </Toolbar>
         </AppBar>
-        <Toolbar /> {/* for spacing, so that content start below main toolbar */}
       </Box>
 
   );

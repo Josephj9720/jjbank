@@ -14,6 +14,10 @@ const AuthButton = ({ type, text, variant }) => {
           "md" : "45%",
           "lg" : "40%",
         },
+        "margin" : {
+          "xs" : "0 0 3%",
+          "md" : "0 1.5%",
+        },
         "padding" : "0.80rem",
       }}
     >

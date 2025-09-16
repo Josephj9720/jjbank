@@ -1,0 +1,25 @@
+import { Button } from '@mui/material';
+
+const AuthButton = ({ type, text, variant }) => {
+  return (
+    <Button
+      type={type ? type : "submit"}
+      color="secondary"
+      variant={variant ? variant : "contained"}
+      size="large"
+      sx={{
+        "width": {
+          "xs" : "100%",
+          "sm" : "55%",
+          "md" : "45%",
+          "lg" : "40%",
+        },
+        "padding" : "0.80rem",
+      }}
+    >
+      {text}
+    </Button>
+  );
+}
+
+export default AuthButton;

@@ -1,10 +1,12 @@
-import { Button, Card, CardContent, TextField } from "@mui/material";
+import { Button, CardContent, TextField, Typography } from "@mui/material";
+import AuthCard from "../AuthCard";
 import api from "../../util/apiClient";
 import { useState } from "react";
 import { useNavigate } from "react-router";
 import { API_ENDPOINTS } from "../../util/endpoints"
 import { FRONT_END_ROUTES } from "../../util/routes";
 import useTitle from "../../hooks/useTitle";
+import AuthButton from "../AuthButton";
 
 const Register = () => {
   useTitle("Register | JJ Bank")
@@ -35,45 +37,72 @@ const Register = () => {
 
 
   return (
-    <Card>
-      <CardContent>
-        <form noValidate autoComplete="off" onSubmit={handleSubmit}>
-          <TextField
-            label="Full Name"
-            variant="outlined"
-            color="primary"
-            name="fullName"
-            value={formData.fullName}
-            onChange={handleChange}
-          />
-          <TextField
-            label="Email"
-            variant="outlined"
-            color="primary"
-            required
-            name="email"
-            value={formData.email}
-            onChange={handleChange}
-          />
-          <TextField
-            label="Password"
-            variant="outlined"
-            color="primary"
-            required
-            name="password"
-            value={formData.password}
-            onChange={handleChange}
-          />
-          <Button
-          type="submit"
-          color="secondary"
-          variant="contained"
-        >
-          Submit
-        </Button>
-        </form>
-      </CardContent>
-    </Card>
+
+      <AuthCard>
+        <CardContent>
+          <Typography 
+            variant="h6"
+            marginBottom={"1%"}
+          >
+            JJ BANK ONLINE BANKING
+          </Typography>
+          <Typography 
+            variant="h4"
+            marginBottom={"1%"}
+          >
+            Register today
+          </Typography>
+          <Typography 
+            variant="h5"
+            marginBottom={"5%"}
+          >
+            Securely manage your finances
+          </Typography>
+          <form noValidate autoComplete="off" onSubmit={handleSubmit}>
+            <TextField
+              fullWidth
+              label="Full Name"
+              variant="outlined"
+              color="primary"
+              required
+              name="fullName"
+              value={formData.fullName}
+              onChange={handleChange}
+              sx={{
+                "marginBottom" : "3%",
+              }}
+            />
+            <TextField
+              fullWidth
+              label="Email"
+              variant="outlined"
+              color="primary"
+              required
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              sx={{
+                "marginBottom" : "3%",
+              }}
+            />
+            <TextField
+              fullWidth
+              type="password"
+              label="Password"
+              variant="outlined"
+              color="primary"
+              required
+              name="password"
+              value={formData.password}
+              onChange={handleChange}
+              sx={{
+                "marginBottom" : "5%",
+              }}
+            />
+            <AuthButton text={"Confirm"}/>
+          </form>
+        </CardContent>
+      </AuthCard>
   );
 }
 

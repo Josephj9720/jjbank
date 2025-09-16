@@ -7,10 +7,17 @@ import { API_ENDPOINTS } from "../../util/endpoints"
 import { FRONT_END_ROUTES } from "../../util/routes";
 import useTitle from "../../hooks/useTitle";
 import AuthButton from "../AuthButton";
+import { validateRegister } from "../../util/authValidator";
 
 const Register = () => {
   useTitle("Register | JJ Bank")
   const [formData, setFormData] = useState({
+    fullName: "",
+    email: "",
+    password: "",
+  });
+
+  const [formErrors, setFormErrors] = useState({
     fullName: "",
     email: "",
     password: "",
@@ -25,13 +32,27 @@ const Register = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    try {
-      const response = await api.post(API_ENDPOINTS.REGISTER, formData);
-      console.log("success:", response.data);
-      navigate(FRONT_END_ROUTES.LOGIN);
+    const { 
+      isValid, 
+      nameErrorMessage, 
+      emailErrorMessage, 
+      passwordErrorMessage } = validateRegister(formData.fullName, formData.email, formData.password);
 
-    } catch(error) {
-      console.log("error submitting form: ", error);
+    if(isValid) {
+      try {
+        const response = await api.post(API_ENDPOINTS.REGISTER, formData);
+        console.log("success:", response.data);
+        navigate(FRONT_END_ROUTES.LOGIN);
+
+      } catch(error) {
+        console.log("error submitting form: ", error);
+      }
+    } else {
+      setFormErrors({
+        fullName: nameErrorMessage,
+        email: emailErrorMessage,
+        password: passwordErrorMessage,
+      });
     }
   };
 
@@ -60,6 +81,7 @@ const Register = () => {
           </Typography>
           <form noValidate autoComplete="off" onSubmit={handleSubmit}>
             <TextField
+              error={!!formErrors.fullName}
               fullWidth
               label="Full Name"
               variant="outlined"
@@ -71,8 +93,10 @@ const Register = () => {
               sx={{
                 "marginBottom" : "3%",
               }}
+              helperText={formErrors.fullName}
             />
             <TextField
+              error={!!formErrors.email}
               fullWidth
               label="Email"
               variant="outlined"
@@ -84,8 +108,10 @@ const Register = () => {
               sx={{
                 "marginBottom" : "3%",
               }}
+              helperText={formErrors.email}
             />
             <TextField
+              error={!!formErrors.password}
               fullWidth
               type="password"
               label="Password"
@@ -98,6 +124,7 @@ const Register = () => {
               sx={{
                 "marginBottom" : "5%",
               }}
+              helperText={formErrors.password}
             />
             <AuthButton text={"Confirm"}/>
           </form>

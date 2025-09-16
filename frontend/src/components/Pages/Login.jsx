@@ -92,6 +92,7 @@ const Login = () => {
           />
           <TextField
             error={!!formErrors.password}
+            type="password"
             fullWidth
             label="Password"
             variant="outlined"

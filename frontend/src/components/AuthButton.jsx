@@ -1,11 +1,12 @@
 import { Button } from '@mui/material';
 
-const AuthButton = ({ type, text, variant }) => {
+const AuthButton = ({ type, text, variant, onClick }) => {
   return (
     <Button
       type={type ? type : "submit"}
       color="secondary"
       variant={variant ? variant : "contained"}
+      onClick={onClick}
       size="large"
       sx={{
         "width": {

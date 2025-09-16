@@ -26,7 +26,7 @@ const Register = () => {
     e.preventDefault();
 
     try {
-      const response = await api.post(API_ENDPOINTS.AUTH + "/register", formData);
+      const response = await api.post(API_ENDPOINTS.REGISTER, formData);
       console.log("success:", response.data);
       navigate(FRONT_END_ROUTES.LOGIN);
 

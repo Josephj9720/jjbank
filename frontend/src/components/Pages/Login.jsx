@@ -24,7 +24,7 @@ const Login = () => {
     e.preventDefault();
 
     try {
-      const response = await api.post(API_ENDPOINTS.AUTH + "/login", formData);
+      const response = await api.post(API_ENDPOINTS.LOGIN, formData);
       console.log("success", response.data);
       navigate(FRONT_END_ROUTES.DASHBOARD);
     } catch (error) {

@@ -1,17 +1,16 @@
 package dev.jordanjoseph.backend.service;
 
-import dev.jordanjoseph.backend.dto.authentication.AuthResponse;
-import dev.jordanjoseph.backend.dto.authentication.LoginRequest;
-import dev.jordanjoseph.backend.dto.authentication.RefreshRequest;
-import dev.jordanjoseph.backend.dto.authentication.RegisterRequest;
+import dev.jordanjoseph.backend.dto.authentication.*;
 
 import dev.jordanjoseph.backend.model.RefreshToken;
 import dev.jordanjoseph.backend.model.User;
 import dev.jordanjoseph.backend.repository.RefreshTokenRepository;
 import dev.jordanjoseph.backend.repository.UserRepository;
 
+import dev.jordanjoseph.backend.util.HttpOnlyCookieGenerator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseCookie;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -39,6 +38,9 @@ public class AuthService {
     @Autowired
     private PasswordEncoder encoder;
 
+    @Autowired
+    private HttpOnlyCookieGenerator cookieGenerator;
+
     @Value("${jjb.jwt.refresh-days}")
     private long refreshDays;
 
@@ -57,7 +59,7 @@ public class AuthService {
     }
 
     @Transactional
-    public AuthResponse login(LoginRequest request) {
+    public AuthResults login(LoginRequest request) {
         User user = users.findByEmail(request.email()).orElseThrow(() -> new BadCredentialsException("Invalid credentials!"));
         if(!encoder.matches(request.password(), user.getPasswordHash())) throw new BadCredentialsException("Invalid credentials!");
 
@@ -70,11 +72,15 @@ public class AuthService {
         refreshToken.setExpiresAt(Instant.now().plus(refreshDays, ChronoUnit.DAYS));
         refreshTokens.save(refreshToken);
 
-        return new AuthResponse(accessToken, refreshToken.getToken());
+        //create http only cookie, in prod, set secure to true
+        ResponseCookie httpOnlyCookie = cookieGenerator
+                .generate("refreshToken", refreshToken.getToken(), refreshDays, ChronoUnit.DAYS);
+
+        return new AuthResults(new AuthResponse(user.getFullName(), accessToken), httpOnlyCookie.toString());
     }
 
     @Transactional
-    public AuthResponse refresh(RefreshRequest request) {
+    public AuthResults refresh(RefreshRequest request) {
         RefreshToken refreshToken = refreshTokens.findByTokenAndRevokedFalse(request.refreshToken())
                 .orElseThrow(() -> new BadCredentialsException("Invalid refresh token!"));
         if(refreshToken.getExpiresAt().isBefore(Instant.now()))  throw new BadCredentialsException("Expired refresh token!");
@@ -89,6 +95,10 @@ public class AuthService {
         newRefreshToken.setExpiresAt(Instant.now().plus(refreshDays, ChronoUnit.DAYS));
         refreshTokens.save(newRefreshToken);
 
-        return new AuthResponse(newAccessToken, newRefreshToken.getToken());
+        //create http only cookie, in prod, set secure to true
+        ResponseCookie httpOnlyCookie = cookieGenerator
+                .generate("refreshToken", newRefreshToken.getToken(), refreshDays, ChronoUnit.DAYS);
+
+        return new AuthResults(new AuthResponse(user.getFullName(), newAccessToken), httpOnlyCookie.toString());
     }
 }

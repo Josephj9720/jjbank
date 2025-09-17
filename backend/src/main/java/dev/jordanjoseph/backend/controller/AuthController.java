@@ -1,19 +1,15 @@
 package dev.jordanjoseph.backend.controller;
 
-import dev.jordanjoseph.backend.dto.authentication.AuthResponse;
-import dev.jordanjoseph.backend.dto.authentication.LoginRequest;
-import dev.jordanjoseph.backend.dto.authentication.RefreshRequest;
-import dev.jordanjoseph.backend.dto.authentication.RegisterRequest;
+import dev.jordanjoseph.backend.dto.authentication.*;
 
 import dev.jordanjoseph.backend.service.AuthService;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -30,13 +26,23 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public AuthResponse login(@RequestBody LoginRequest request) {
-        return authService.login(request);
+    public ResponseEntity<AuthResponse> login(@RequestBody LoginRequest request, HttpServletResponse response) {
+        AuthResults authResults = authService.login(request);
+
+        //attach cookie to response
+        response.addHeader(HttpHeaders.SET_COOKIE, authResults.httpOnlyCookie());
+
+        return ResponseEntity.ok(authResults.authResponse());
     }
 
     @PostMapping("/refresh")
-    public AuthResponse refresh(@RequestBody RefreshRequest request) {
-        return authService.refresh(request);
+    public ResponseEntity<AuthResponse> refresh(@CookieValue("refreshToken") RefreshRequest request, HttpServletResponse response) {
+        AuthResults authResults = authService.refresh(request);
+
+        //attach cookie to response
+        response.addHeader(HttpHeaders.SET_COOKIE, authResults.httpOnlyCookie());
+
+        return ResponseEntity.ok(authResults.authResponse());
     }
 
 }

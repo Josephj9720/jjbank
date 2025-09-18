@@ -1,6 +1,7 @@
 import { Outlet } from "react-router";
 import Navbar from "./Navbar";
-import { Toolbar, Box } from "@mui/material"
+import { Toolbar, Box } from "@mui/material";
+import Footer from "./Footer";
 
 const Layout = () => {
   return (
@@ -10,6 +11,7 @@ const Layout = () => {
       <main>
         <Outlet /> {/* Renders the current page component */}
       </main>
+      <Footer />
     </>
   );
 }

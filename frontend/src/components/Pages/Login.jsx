@@ -1,4 +1,4 @@
-import { Button, Card, CardContent, TextField, Typography } from "@mui/material";
+import { Box, Button, Card, CardContent, TextField, Typography } from "@mui/material";
 import useTitle from "../../hooks/useTitle";
 import { useState } from "react";
 import api from "../../util/apiClient";
@@ -21,7 +21,9 @@ const Login = () => {
   const [formErrors, setFormErrors] = useState({
     email: "",
     password: "",
-  })
+  });
+
+  const [failedLogin, setFailedLogin] = useState(false);
 
   const auth = useAuthContext();
 
@@ -48,6 +50,7 @@ const Login = () => {
         
       } catch (error) {
         console.log("error submitting form", error);
+        setFailedLogin(true);
       }
     } else {
       setFormErrors({
@@ -83,6 +86,19 @@ const Login = () => {
         Securely manage your finances
       </Typography>
       <CardContent>
+        { failedLogin && <Box
+          sx={{
+            marginBottom: "3%",
+            border: "2px solid #FF474C",
+            borderRadius: "15px",
+            backgroundColor: "#FF999C",
+            padding: "1.5%"
+          }}
+        >
+          <Typography variant="body1">
+            You have entered incorrect information. Please verify your info and try again.
+          </Typography>
+        </Box> }
         <form noValidate autoComplete="off" onSubmit={handleSubmit}>
           <TextField
             error={!!formErrors.email}

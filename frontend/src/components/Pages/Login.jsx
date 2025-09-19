@@ -45,7 +45,7 @@ const Login = () => {
           fullName: response.data.fullName,
           accessToken: response.data.accessToken, 
         });
-        navigate(FRONT_END_ROUTES.DASHBOARD, { replace : true });
+        
       } catch (error) {
         console.log("error submitting form", error);
       }

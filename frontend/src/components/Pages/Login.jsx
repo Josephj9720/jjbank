@@ -8,6 +8,7 @@ import { useNavigate } from "react-router";
 import AuthCard from "../AuthCard";
 import AuthButton from "../AuthButton";
 import { validateLogin } from "../../util/authValidator";
+import { useAuthContext } from "../../hooks/useAuthentication";
 
 const Login = () => {
   useTitle("Login | JJ Bank");
@@ -22,6 +23,8 @@ const Login = () => {
     password: "",
   })
 
+  const auth = useAuthContext();
+
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -31,12 +34,18 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const {isValid, emailErrorMessage, passwordErrorMessage} = validateLogin(formData.email, formData.password);
+    const { isValid, emailErrorMessage, passwordErrorMessage } = validateLogin(formData.email, formData.password);
     if(isValid) {
       try {
-        const response = await api.post(API_ENDPOINTS.LOGIN, formData);
+        const response = await api.post(API_ENDPOINTS.LOGIN, formData, {
+          withCredentials: true //this allows to receive the cookie
+        });
         console.log("success", response.data);
-        navigate(FRONT_END_ROUTES.DASHBOARD);
+        auth.setAuthDetails({
+          fullName: response.data.fullName,
+          accessToken: response.data.accessToken, 
+        });
+        navigate(FRONT_END_ROUTES.DASHBOARD, { replace : true });
       } catch (error) {
         console.log("error submitting form", error);
       }

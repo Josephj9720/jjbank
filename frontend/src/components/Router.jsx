@@ -3,6 +3,7 @@ import { FRONT_END_ROUTES } from '../util/routes';
 import Layout from './Layout';
 import Register from './Pages/Register';
 import Login from './Pages/Login';
+import Dashboard  from './Pages/Dashboard';
 
 function Router() {
   return (
@@ -11,7 +12,7 @@ function Router() {
         <Route index element={<p>home</p>}/> {/* index is the default content of the parent route */}
         <Route path={FRONT_END_ROUTES.LOGIN} element={<Login/>}/>
         <Route path={FRONT_END_ROUTES.REGISTER} element={<Register/>}/>
-        <Route path={FRONT_END_ROUTES.DASHBOARD} element={<p>dashboard</p>}/>
+        <Route path={FRONT_END_ROUTES.DASHBOARD} element={<Dashboard/>}/>
         <Route path={FRONT_END_ROUTES.ACCOUNTS} element={<p>accounts</p>}/>
         <Route path={FRONT_END_ROUTES.TRANSFER} element={<p>transfer</p>}/>
       </Route>

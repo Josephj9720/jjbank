@@ -26,6 +26,9 @@ public class SecurityConfig {
     @Autowired
     AuthenticationProvider authenticationProvider;
 
+    @Autowired
+    private RefreshTokenLogoutHandler refreshTokenLogoutHandler;
+
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -42,7 +45,7 @@ public class SecurityConfig {
                 .authenticationProvider(authenticationProvider)
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
                 .logout(configurer -> configurer.logoutUrl("/api/auth/logout")
-                        .addLogoutHandler()
+                        .addLogoutHandler(refreshTokenLogoutHandler)
                         .deleteCookies("refreshToken")
                         .logoutSuccessHandler(new HttpStatusReturningLogoutSuccessHandler(HttpStatus.NO_CONTENT))
                 );

@@ -101,4 +101,13 @@ public class AuthService {
 
         return new AuthResults(new AuthResponse(user.getFullName(), newAccessToken), httpOnlyCookie.toString());
     }
+
+    @Transactional
+    public void revokeRefreshToken(String refreshToken) {
+        //invalidate the refresh token on logout, if it is not revoked yet
+        refreshTokens.findByTokenAndRevokedFalse(refreshToken)
+                .ifPresent(activeToken -> {
+                    activeToken.setRevoked(true);
+                });
+    }
 }

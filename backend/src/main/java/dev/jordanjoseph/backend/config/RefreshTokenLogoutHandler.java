@@ -5,6 +5,7 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.logout.LogoutHandler;
 import org.springframework.stereotype.Component;
@@ -17,12 +18,16 @@ public class RefreshTokenLogoutHandler implements LogoutHandler {
     @Autowired
     private AuthService authService;
 
+    @Value("${jjb.allowed-origins}")
+    private String allowedOrigins;
+
     @Override
     public void logout(HttpServletRequest request, HttpServletResponse response, Authentication authentication) {
         String refreshToken = extractRefreshToken(request);
         if(!refreshToken.isBlank()) {
             authService.revokeRefreshToken(refreshToken);
         }
+        setResponseHeaders(response);
     }
 
     private String extractRefreshToken(HttpServletRequest request) {
@@ -32,5 +37,12 @@ public class RefreshTokenLogoutHandler implements LogoutHandler {
                 .findFirst()
                 .map(Cookie::getValue)
                 .orElse("");
+    }
+
+    private void setResponseHeaders(HttpServletResponse response) {
+        //set all required CORS headers explicitly for this logout response
+        response.setHeader("Access-Control-Allow-Origin", allowedOrigins);
+        response.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+        response.setHeader("Access-Control-Allow-Credentials", "true");
     }
 }

@@ -1,6 +1,6 @@
 import { Outlet } from "react-router";
 import Navbar from "./Navbar";
-import { Toolbar, Box } from "@mui/material";
+import { Toolbar } from "@mui/material";
 import Footer from "./Footer";
 
 const Layout = () => {

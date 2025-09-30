@@ -1,4 +1,4 @@
-import { Button, CardContent, TextField, Typography } from "@mui/material";
+import { CardContent, TextField, Typography } from "@mui/material";
 import AuthCard from "../AuthCard";
 import api from "../../util/apiClient";
 import { useState } from "react";

@@ -1,12 +1,12 @@
 import { Routes, Route } from 'react-router';
-import { FRONT_END_ROUTES } from '../util/routes';
-import Layout from './Layout';
-import Register from './Pages/Register';
-import Login from './Pages/Login';
-import Dashboard  from './Pages/Dashboard';
+import { FRONT_END_ROUTES } from '../../util/routes';
+import Layout from '../Layout';
+import Register from '../pages/Register';
+import Login from '../pages/Login';
+import Dashboard  from '../pages/Dashboard';
 import PublicRoute from './PublicRoute';
 import ProtectedRoute from './ProtectedRoute';
-import Logout from './Pages/Logout';
+import Logout from '../pages/Logout';
 
 function Router() {
   

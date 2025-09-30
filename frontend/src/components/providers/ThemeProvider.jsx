@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { ThemeProvider as MuiThemeProvider } from "@mui/material";
-import { ThemeContext, useSystemColorMode } from "../hooks/useTheme";
-import getTheme from "../util/theme";
+import { ThemeContext, useSystemColorMode } from "../../hooks/useTheme";
+import getTheme from "../../util/theme";
 
 
 //Create the component that holds the state

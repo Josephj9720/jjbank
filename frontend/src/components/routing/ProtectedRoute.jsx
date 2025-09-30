@@ -1,6 +1,6 @@
 import { Navigate, useLocation } from "react-router";
-import { useAuthContext } from "../hooks/useAuthentication";
-import { FRONT_END_ROUTES } from "../util/routes";
+import { useAuthContext } from "../../hooks/useAuthentication";
+import { FRONT_END_ROUTES } from "../../util/routes";
 
 function ProtectedRoute({ children }) {
   const { authDetails } = useAuthContext();

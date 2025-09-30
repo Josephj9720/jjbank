@@ -1,4 +1,4 @@
-import { AuthenticationContext, useRefreshToken } from "../hooks/useAuthentication";
+import { AuthenticationContext, useRefreshToken } from "../../hooks/useAuthentication";
 import { CircularProgress } from "@mui/material";
 
 //holds the state for the authentication data, initially blank

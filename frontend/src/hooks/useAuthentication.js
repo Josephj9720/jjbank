@@ -13,6 +13,7 @@ export const useAuthContext = () => useContext(AuthenticationContext);
 export const useRefreshToken = () => {
 
   const [authDetails, setAuthDetails] = useState(null);
+  const [isAuthenticating, setIsAuthenticating] = useState(true);
 
   //returns a memoized version of the method unless one of the inputs has changed
   const refreshToken = useCallback(() => {
@@ -38,13 +39,15 @@ export const useRefreshToken = () => {
       //failure: clear auth details (log out user)
       setAuthDetails(null);
     })
+    .finally(() => {
+      setIsAuthenticating(false);
+    });
 
-
-  }, [authDetails, setAuthDetails]); //dependency array to prevent re-creation
+  }, [authDetails]); //dependency array to prevent re-creation
   
   useEffect(() => {
     refreshToken();
   }, [refreshToken]);
 
-  return [authDetails, setAuthDetails];
+  return [authDetails, setAuthDetails, isAuthenticating];
 }

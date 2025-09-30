@@ -5,4 +5,5 @@ export const FRONT_END_ROUTES = {
   DASHBOARD : "/dashboard",
   ACCOUNTS : "/accounts",
   TRANSFER : "/transfer",
+  LOGOUT: "/logout",
 }

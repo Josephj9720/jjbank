@@ -14,7 +14,11 @@ const lightTheme = createTheme({
       main: "#054480",
     },
     background: {
-      
+      default: "#EDF3FC",
+    },
+    navbar: {
+      background: "#0C2850",
+      text: "#EDF3FC",
     }
   }
 });
@@ -28,6 +32,13 @@ const darkTheme = createTheme({
     },
     secondary: {
       main: "#0C2850",
+    },
+    background: {
+      default: "#0B1215",
+    },
+    navbar: {
+      background: "#0B1215",
+      text: "#F3F3F3",
     }
   }
 })

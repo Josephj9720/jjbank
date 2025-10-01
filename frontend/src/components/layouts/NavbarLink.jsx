@@ -14,9 +14,6 @@ const NavbarLink = ({ icon: IconComponent, text, destination, isActive }) => {
     ":hover": {
       borderBottom: (theme) => `4px solid ${theme.palette.navbar.text}`
     },
-    ":focus": {
-      borderBottom: (theme) => `4px solid ${theme.palette.navbar.text}`
-    }
   };
 
   const activeStyles = {

@@ -1,6 +1,6 @@
 import { Routes, Route } from 'react-router';
 import { FRONT_END_ROUTES } from '../../util/routes';
-import Layout from '../Layout';
+import Layout from '../layouts/Layout';
 import Register from '../pages/Register';
 import Login from '../pages/Login';
 import Dashboard  from '../pages/Dashboard';

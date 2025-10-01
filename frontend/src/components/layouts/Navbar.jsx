@@ -1,10 +1,11 @@
-import { Box, AppBar, Toolbar } from '@mui/material'
+import { Box, AppBar, Toolbar, SvgIcon } from '@mui/material'
 import NavbarLink from './NavbarLink';
 import { Lock, LockOpen } from '@mui/icons-material';
 import { useLocation } from 'react-router';
 import VerticalDivider from './VerticalDivider';
-import { useAuthContext } from '../hooks/useAuthentication';
-import { FRONT_END_ROUTES } from '../util/routes';
+import { useAuthContext } from '../../hooks/useAuthentication';
+import { FRONT_END_ROUTES } from '../../util/routes';
+import JJBankIcon from '../../assets/jjbank-logo-light.svg';
 
 export default function Navbar() {
 
@@ -25,8 +26,17 @@ export default function Navbar() {
             alignItems: "stretch", 
             backgroundColor: (theme) => theme.palette.navbar.background}}
           >
+            {/* <Box sx={{ display: "flex", gap: 1 }}>
+              <SvgIcon component={JJBankIcon} />
+              {
+                authDetails && <>
+                  <NavbarLink/>
+                  <NavbarLink/>
+                  <NavbarLink/>
+                </>
+              }
+            </Box> */}
             <Box sx={{marginLeft: "auto", display: "flex", gap: 1}}>
-
               <VerticalDivider />
               {
                 authDetails || isCurrentRoute(FRONT_END_ROUTES.LOGOUT)
@@ -46,8 +56,6 @@ export default function Navbar() {
                   />
               }
             </Box>
-
-
           </Toolbar>
         </AppBar>
       </Box>

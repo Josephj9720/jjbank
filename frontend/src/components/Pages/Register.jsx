@@ -1,12 +1,12 @@
 import { CardContent, TextField, Typography } from "@mui/material";
-import AuthCard from "../AuthCard";
+import AuthCard from "../layouts/AuthCard";
 import api from "../../util/apiClient";
 import { useState } from "react";
 import { useNavigate } from "react-router";
 import { API_ENDPOINTS } from "../../util/endpoints"
 import { FRONT_END_ROUTES } from "../../util/routes";
 import useTitle from "../../hooks/useTitle";
-import AuthButton from "../AuthButton";
+import AuthButton from "../layouts/AuthButton";
 import { validateRegister } from "../../util/authValidator";
 
 const Register = () => {

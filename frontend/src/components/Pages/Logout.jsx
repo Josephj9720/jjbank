@@ -1,6 +1,6 @@
 import { Button, CardContent, Typography } from "@mui/material";
 import useTitle from "../../hooks/useTitle";
-import AuthCard from "../AuthCard";
+import AuthCard from "../layouts/AuthCard";
 import { useCallback, useEffect, useState } from "react";
 import LogoutIcon from "@mui/icons-material/Logout";
 import { useNavigate } from "react-router";

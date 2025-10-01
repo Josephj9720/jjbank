@@ -1,11 +1,11 @@
-import { Box, AppBar, Toolbar, SvgIcon } from '@mui/material'
+import { Box, AppBar, Toolbar } from '@mui/material'
 import NavbarLink from './NavbarLink';
 import { Lock, LockOpen } from '@mui/icons-material';
 import { useLocation } from 'react-router';
 import VerticalDivider from './VerticalDivider';
 import { useAuthContext } from '../../hooks/useAuthentication';
 import { FRONT_END_ROUTES } from '../../util/routes';
-import JJBankIcon from '../../assets/jjbank-logo-light.svg';
+import NavbarIcon from './NavbarIcon';
 
 export default function Navbar() {
 
@@ -26,16 +26,30 @@ export default function Navbar() {
             alignItems: "stretch", 
             backgroundColor: (theme) => theme.palette.navbar.background}}
           >
-            {/* <Box sx={{ display: "flex", gap: 1 }}>
-              <SvgIcon component={JJBankIcon} />
+            <Box sx={{ display: "flex", marginRight: (theme) => theme.spacing(3) }}>
+              <NavbarIcon 
+                asset={"appIcon"}
+                assetAria={"appIconAria"}
+                destination={FRONT_END_ROUTES.HOME}
+              />
+            </Box>
+            <Box sx={{ display: "flex", gap: 1, marginLeft: (theme) => theme.spacing(3) }}>
               {
                 authDetails && <>
-                  <NavbarLink/>
-                  <NavbarLink/>
-                  <NavbarLink/>
+                  <NavbarLink
+                    text={"Dashboard"}
+                    destination={FRONT_END_ROUTES.DASHBOARD}
+                    isActive={isCurrentRoute(FRONT_END_ROUTES.DASHBOARD)}
+                  />
+                  <VerticalDivider />
+                  <NavbarLink
+                    text={"Transfer"}
+                    destination={FRONT_END_ROUTES.TRANSFER}
+                    isActive={isCurrentRoute(FRONT_END_ROUTES.TRANSFER)}
+                  />
                 </>
               }
-            </Box> */}
+            </Box>
             <Box sx={{marginLeft: "auto", display: "flex", gap: 1}}>
               <VerticalDivider />
               {

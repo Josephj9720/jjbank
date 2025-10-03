@@ -12,19 +12,12 @@ const NavbarLink = ({ icon: IconComponent, text, destination, isActive }) => {
     textAlign: "center",
     textDecoration: "none",
     ":hover": {
-      color: (theme) => theme.palette.primary.main,
-      backgroundColor: (theme) => theme.palette.navbar.text
-    },
-    ":focus": {
-      color: (theme) => theme.palette.navbar.text,
-      backgroundColor: (theme) => theme.palette.primary.main,
       borderBottom: (theme) => `4px solid ${theme.palette.navbar.text}`
-    }
+    },
   };
 
   const activeStyles = {
     color: (theme) => theme.palette.navbar.text,
-    backgroundColor: (theme) => theme.palette.primary.main,
     borderBottom: (theme) => `4px solid ${theme.palette.navbar.text}`,
     display: "flex",
     alignItems: "center",

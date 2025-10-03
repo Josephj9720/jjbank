@@ -20,6 +20,12 @@ const lightTheme = createTheme({
       background: "#0C2850",
       text: "#EDF3FC",
     }
+  },
+  assets: {
+    navbar: {
+      appIcon: "src/assets/jjbank-logo-light.svg",
+      appIconAria: "JJBank Logo Light",
+    }
   }
 });
 
@@ -39,6 +45,12 @@ const darkTheme = createTheme({
     navbar: {
       background: "#0B1215",
       text: "#F3F3F3",
+    }
+  },
+  assets: {
+    navbar: {
+      appIcon: "src/assets/jjbank-logo-dark.svg",
+      appIconAria: "JJBank Logo Dark",
     }
   }
 })

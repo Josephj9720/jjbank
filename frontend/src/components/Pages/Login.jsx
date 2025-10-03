@@ -5,8 +5,8 @@ import api from "../../util/apiClient";
 import { API_ENDPOINTS } from "../../util/endpoints";
 import { FRONT_END_ROUTES } from "../../util/routes";
 import { useNavigate } from "react-router";
-import AuthCard from "../AuthCard";
-import AuthButton from "../AuthButton";
+import AuthCard from "../layouts/AuthCard";
+import AuthButton from "../layouts/AuthButton";
 import { validateLogin } from "../../util/authValidator";
 import { useAuthContext } from "../../hooks/useAuthentication";
 

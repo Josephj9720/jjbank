@@ -10,13 +10,19 @@ import java.util.UUID;
 @Table(name = "accounts")
 public class Account {
 
+    public enum Type { CHECKING, SAVINGS }
+
     @Id
     @GeneratedValue
     private UUID id;
 
     @OneToOne(optional = false)
-    @JoinColumn(name = "user_id", unique = true) //one account per user (mvp)
+    @JoinColumn(name = "user_id") //default: unique = false, allows multiple accounts per user
     private User user;
+
+    @Enumerated(EnumType.STRING) //to convert enum types to and from database
+    @Column(nullable = false)
+    private Type type;
 
     @Column(nullable = false, precision = 19, scale = 2) //19 digits total, 2 for fractional part
     private BigDecimal balance = BigDecimal.ZERO;
@@ -39,6 +45,14 @@ public class Account {
     /** set by DB */
     public Instant getCreatedAt() {
         return createdAt;
+    }
+
+    public Type getType() {
+        return type;
+    }
+
+    public void setType(Type type) {
+        this.type = type;
     }
 
     public User getUser() {

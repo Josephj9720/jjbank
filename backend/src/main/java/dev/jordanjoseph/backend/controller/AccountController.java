@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -22,8 +23,8 @@ public class AccountController {
     private TransactionService transactionService;
 
     @GetMapping("/me")
-    public AccountView me() {
-        return accountService.myAccount();
+    public List<AccountView> me() {
+        return accountService.myAccounts();
     }
 
     @PostMapping("/{id}/deposit")

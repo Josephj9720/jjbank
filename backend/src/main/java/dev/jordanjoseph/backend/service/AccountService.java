@@ -10,6 +10,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 
 @Service
 public class AccountService {
@@ -21,9 +23,11 @@ public class AccountService {
     private AccountValidator accountValidator;
 
     @Transactional
-    public AccountView myAccount() {
-        Account account = accountValidator.getCurrentUserAccount();
-        return new AccountView(account.getId(), account.getBalance());
+    public List<AccountView> myAccounts() {
+        return accountValidator.getCurrentUserAccounts()
+                .stream()
+                .map(account -> new AccountView(account.getId(), account.getBalance()))
+                .toList();
     }
 
     @Transactional

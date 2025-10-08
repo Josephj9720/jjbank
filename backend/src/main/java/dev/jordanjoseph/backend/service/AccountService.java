@@ -28,11 +28,14 @@ public class AccountService {
 
     @Transactional
     public void createForUser(User user, String type) {
-        //if type is null or blank, default to checking, set to uppercase to prevent case-sensitivity issues
-        Account.Type t = (type == null || type.isBlank() ? Account.Type.CHECKING : Account.Type.valueOf(type.toUpperCase()));
-        Account account = new Account();
-        account.setUser(user);
-        account.setType(t);
-        accountRepository.save(account);
+        //limit to three accounts per user
+        if(accountRepository.countByUserId(user.getId()) < 3) {
+            //if type is null or blank, default to checking, set to uppercase to prevent case-sensitivity issues
+            Account.Type t = (type == null || type.isBlank() ? Account.Type.CHECKING : Account.Type.valueOf(type.toUpperCase()));
+            Account account = new Account();
+            account.setUser(user);
+            account.setType(t);
+            accountRepository.save(account);
+        }
     }
 }

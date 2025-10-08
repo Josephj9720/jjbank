@@ -8,4 +8,5 @@ import java.util.UUID;
 
 public interface AccountRepository extends JpaRepository<Account, UUID> {
     Optional<Account> findByUserId(UUID userId);
+    long countByUserId(UUID userId);
 }

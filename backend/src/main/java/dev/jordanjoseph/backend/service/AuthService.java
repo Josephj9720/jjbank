@@ -54,8 +54,8 @@ public class AuthService {
         user.getRoles().add("ROLE_USER");
         users.save(user);
 
-        //create default account
-        accountService.createForUser(user);
+        //create account
+        accountService.createForUser(user, request.accountType());
     }
 
     @Transactional

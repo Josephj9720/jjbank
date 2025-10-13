@@ -14,6 +14,7 @@ import org.springframework.stereotype.Component;
 import java.math.BigDecimal;
 import java.util.Collection;
 
+import java.util.List;
 import java.util.UUID;
 
 @Component
@@ -35,9 +36,8 @@ public class AccountValidator {
         return userPrincipal.getAuthorities();
     }
 
-    public Account getCurrentUserAccount() {
-        return accountRepository.findByUserId(currentUserId())
-                .orElseThrow(() -> new IllegalStateException("Account not found"));
+    public List<Account> getCurrentUserAccounts() {
+        return accountRepository.findByUserId(currentUserId());
     }
 
     public Account exist(UUID accountId) {
@@ -48,7 +48,6 @@ public class AccountValidator {
     public void requireOwned(UUID userId) {
 
         if(!userId.equals(currentUserId()) || isAdmin()) {
-            System.out.println("here!");
             throw new AccessDeniedException("Not your account");
         }
     }

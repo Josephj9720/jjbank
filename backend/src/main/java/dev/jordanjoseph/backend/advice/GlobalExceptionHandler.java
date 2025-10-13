@@ -1,5 +1,6 @@
 package dev.jordanjoseph.backend.advice;
 
+import dev.jordanjoseph.backend.exception.AccountLimitReachedException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -67,7 +68,16 @@ public class GlobalExceptionHandler {
 
         return body(HttpStatus.BAD_REQUEST, message, request);
     }
-    
+
+    /** catches AccountLimitReachedExceptions thrown, returns HTTP Bad Request with the JSON body
+     * the error is triggered when a user tries to create an account when the limit per user has been reached
+     */
+    @ExceptionHandler(AccountLimitReachedException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public Map<String, Object> handleAccountLimitReachedException(AccountLimitReachedException e, HttpServletRequest request) {
+        return body(HttpStatus.BAD_REQUEST, e.getMessage(), request);
+    }
+
     /** catches all exceptions that are not explicitly handled */
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)

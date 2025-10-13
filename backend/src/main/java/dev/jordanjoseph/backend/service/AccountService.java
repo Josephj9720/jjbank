@@ -2,6 +2,7 @@ package dev.jordanjoseph.backend.service;
 
 import dev.jordanjoseph.backend.dto.account.AccountView;
 
+import dev.jordanjoseph.backend.exception.AccountLimitReachedException;
 import dev.jordanjoseph.backend.model.Account;
 import dev.jordanjoseph.backend.model.User;
 import dev.jordanjoseph.backend.repository.AccountRepository;
@@ -46,6 +47,8 @@ public class AccountService {
             account.setUser(user);
             account.setType(t);
             accountRepository.save(account);
+        } else {
+            throw new AccountLimitReachedException("Cannot created account. Already reached the limit of 3 per user.");
         }
     }
 

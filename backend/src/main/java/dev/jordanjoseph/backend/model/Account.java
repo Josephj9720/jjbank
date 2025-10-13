@@ -16,8 +16,8 @@ public class Account {
     @GeneratedValue
     private UUID id;
 
-    @OneToOne(optional = false)
-    @JoinColumn(name = "user_id") //default: unique = false, allows multiple accounts per user
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "user_id", nullable = false) //default: unique = false, allows multiple accounts per user
     private User user;
 
     @Enumerated(EnumType.STRING) //to convert enum types to and from database

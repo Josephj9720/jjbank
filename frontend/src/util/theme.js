@@ -15,6 +15,7 @@ const lightTheme = createTheme({
     },
     background: {
       default: "#EDF3FC",
+      paper: "#EDF3FC",
     },
     navbar: {
       background: "#0C2850",
@@ -41,6 +42,7 @@ const darkTheme = createTheme({
     },
     background: {
       default: "#0B1215",
+      paper: "#0B1215",
     },
     navbar: {
       background: "#0B1215",

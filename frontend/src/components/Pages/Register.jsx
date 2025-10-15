@@ -1,4 +1,4 @@
-import { CardContent, TextField, Typography } from "@mui/material";
+import { CardContent, TextField, Typography, Select, MenuItem } from "@mui/material";
 import AuthCard from "../layouts/AuthCard";
 import api from "../../util/apiClient";
 import { useState } from "react";
@@ -15,6 +15,7 @@ const Register = () => {
     fullName: "",
     email: "",
     password: "",
+    accountType: "checking",
   });
 
   const [formErrors, setFormErrors] = useState({
@@ -96,6 +97,11 @@ const Register = () => {
               helperText={formErrors.fullName}
             />
             <TextField
+              slotProps={{
+                htmlInput: {
+                  autoComplete: "off"
+                }
+              }}
               error={!!formErrors.email}
               fullWidth
               label="Email"
@@ -111,6 +117,11 @@ const Register = () => {
               helperText={formErrors.email}
             />
             <TextField
+              slotProps={{
+                htmlInput: {
+                  autoComplete: "new-password"
+                }
+              }}
               error={!!formErrors.password}
               fullWidth
               type="password"
@@ -122,10 +133,26 @@ const Register = () => {
               value={formData.password}
               onChange={handleChange}
               sx={{
-                "marginBottom" : "5%",
+                "marginBottom" : "3%",
               }}
               helperText={formErrors.password}
             />
+            <TextField
+              select
+              fullWidth
+              name="accountType"
+              label="Bank Account Type"
+              color="primary"
+              value={formData.accountType}
+              onChange={handleChange}
+              required
+              sx={{
+                "marginBottom" : "5%",
+              }}
+            >
+              <MenuItem value="checking">Checking</MenuItem>
+              <MenuItem value="savings">Savings</MenuItem>
+            </TextField>
             <AuthButton text={"Confirm"}/>
           </form>
         </CardContent>

@@ -15,10 +15,23 @@ const lightTheme = createTheme({
     },
     background: {
       default: "#EDF3FC",
+      paper: "#EDF3FC",
     },
     navbar: {
       background: "#0C2850",
       text: "#EDF3FC",
+    },
+    authButton: {
+      outlined: {
+        background: "#00000000",
+        text: "#054480",
+        ripple: "#054480",
+      },
+      contained: {
+        background: "#054480",
+        text: "#EDF3FC",
+        ripple: "#EDF3FC",
+      }
     }
   },
   assets: {
@@ -41,10 +54,23 @@ const darkTheme = createTheme({
     },
     background: {
       default: "#0B1215",
+      paper: "#0B1215",
     },
     navbar: {
       background: "#0B1215",
       text: "#F3F3F3",
+    },
+    authButton: {
+      outlined: {
+        background: "#00000000",
+        text: "#F3F3F3",
+        ripple: "#F3F3F3",
+      },
+      contained: {
+        background: "#0C2850",
+        text: "#F3F3F3",
+        ripple: "#F3F3F3",
+      }
     }
   },
   assets: {

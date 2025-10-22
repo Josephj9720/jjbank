@@ -15,6 +15,7 @@ public class DebitCard implements BankingCard {
     @Column(unique = true)
     private String number;
 
+    @Column(length = 4)
     private String last4;
 
     private String brand;

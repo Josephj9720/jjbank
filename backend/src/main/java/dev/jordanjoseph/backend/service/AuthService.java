@@ -67,7 +67,12 @@ public class AuthService {
 
     @Transactional
     public AuthResults login(LoginRequest request) {
-        User user = users.findByEmail(request.email()).orElseThrow(() -> new BadCredentialsException("Invalid credentials!"));
+        User user = users.findByEmail(request.identifier())
+                .orElse(
+                        debitCardService.getCardByNumber(request.identifier())
+                        .orElseThrow(() -> new BadCredentialsException("Invalid credentials!"))
+                        .getOwner()
+                );
         if(!encoder.matches(request.password(), user.getPasswordHash())) throw new BadCredentialsException("Invalid credentials!");
 
         String accessToken = jwtService.generateToken(user);

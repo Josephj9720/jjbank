@@ -33,6 +33,9 @@ public class AuthService {
     private AccountService accountService;
 
     @Autowired
+    private DebitCardService debitCardService;
+
+    @Autowired
     private JwtService jwtService;
 
     @Autowired
@@ -56,6 +59,10 @@ public class AuthService {
 
         //create account
         accountService.createForUser(user, request.accountType());
+
+        //create debit card
+        debitCardService.createForUser(user);
+
     }
 
     @Transactional

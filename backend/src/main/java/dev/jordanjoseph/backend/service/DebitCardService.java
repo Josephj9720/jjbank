@@ -10,6 +10,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Optional;
+
 @Service
 public class DebitCardService {
 
@@ -30,6 +32,10 @@ public class DebitCardService {
         debitCard.setBrand("JJB Card");
         debitCard.setLast4(display.getLast4FromNumber(debitCard.getNumber()));
         debitCards.save(debitCard);
+    }
+
+    public Optional<DebitCard> getCardByNumber(String number) {
+        return debitCards.findByNumber(number);
     }
 
 }

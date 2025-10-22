@@ -1,5 +1,6 @@
 package dev.jordanjoseph.backend.model;
 
+import dev.jordanjoseph.backend.util.YearMonthToIntegerAttributeConverter;
 import jakarta.persistence.*;
 
 import java.time.YearMonth;
@@ -20,6 +21,8 @@ public class DebitCard implements BankingCard {
 
     private String brand;
 
+    @Column(columnDefinition = "integer")
+    @Convert(converter = YearMonthToIntegerAttributeConverter.class)
     private YearMonth expiry;
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)

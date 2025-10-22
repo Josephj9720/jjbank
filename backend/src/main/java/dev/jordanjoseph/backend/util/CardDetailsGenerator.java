@@ -9,7 +9,7 @@ public class CardDetailsGenerator {
         SecureRandom random = new SecureRandom();
         StringBuilder builder = new StringBuilder(16);
 
-        for(int i = 1; i <= builder.capacity() + 1; i++) {
+        for(int i = 1; i <= builder.capacity(); i++) {
             if(i == 1 || i == 6 || i ==  11 || i == 16) {
                 builder.append(generateRandomLetter(random));
             } else {

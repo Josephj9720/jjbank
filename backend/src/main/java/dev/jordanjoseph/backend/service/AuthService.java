@@ -33,6 +33,9 @@ public class AuthService {
     private AccountService accountService;
 
     @Autowired
+    private DebitCardService debitCardService;
+
+    @Autowired
     private JwtService jwtService;
 
     @Autowired
@@ -56,11 +59,20 @@ public class AuthService {
 
         //create account
         accountService.createForUser(user, request.accountType());
+
+        //create debit card
+        debitCardService.createForUser(user);
+
     }
 
     @Transactional
     public AuthResults login(LoginRequest request) {
-        User user = users.findByEmail(request.email()).orElseThrow(() -> new BadCredentialsException("Invalid credentials!"));
+        User user = users.findByEmail(request.identifier())
+                .orElse(
+                        debitCardService.getCardByNumber(request.identifier())
+                        .orElseThrow(() -> new BadCredentialsException("Invalid credentials!"))
+                        .getOwner()
+                );
         if(!encoder.matches(request.password(), user.getPasswordHash())) throw new BadCredentialsException("Invalid credentials!");
 
         String accessToken = jwtService.generateToken(user);

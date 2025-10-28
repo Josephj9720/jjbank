@@ -43,7 +43,7 @@ public class GlobalExceptionHandler {
     }
 
     /** catches IllegalArgumentExceptions thrown, returns HTTP 400 Bad Request with the JSON body
-     * trigged when a method has been invoked with inappropriate arguments (e.g. Insufficient funds)
+     * triggered when a method has been invoked with inappropriate arguments (e.g. Insufficient funds)
      */
     @ExceptionHandler(IllegalArgumentException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)

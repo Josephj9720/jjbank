@@ -14,12 +14,12 @@ const Login = () => {
   useTitle("Login | JJ Bank");
 
   const [formData, setFormData] = useState({
-    email: "",
+    identifier: "",
     password: "",
   });
 
   const [formErrors, setFormErrors] = useState({
-    email: "",
+    identifier: "",
     password: "",
   });
 
@@ -36,7 +36,7 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const { isValid, emailErrorMessage, passwordErrorMessage } = validateLogin(formData.email, formData.password);
+    const { isValid, identifierErrorMessage, passwordErrorMessage } = validateLogin(formData.identifier, formData.password);
     if(isValid) {
       try {
         const response = await api.post(API_ENDPOINTS.LOGIN, formData, {
@@ -54,7 +54,7 @@ const Login = () => {
       }
     } else {
       setFormErrors({
-        email: emailErrorMessage,
+        identifier: identifierErrorMessage,
         password: passwordErrorMessage,
       });
     }
@@ -77,7 +77,7 @@ const Login = () => {
         variant="h4"
         marginBottom={"1%"}
       >
-        Login using your email
+        Log in to your JJB account
       </Typography>
       <Typography 
         variant="h5"
@@ -101,19 +101,19 @@ const Login = () => {
         </Box> }
         <form noValidate autoComplete="off" onSubmit={handleSubmit}>
           <TextField
-            error={!!formErrors.email}
+            error={!!formErrors.identifier}
             fullWidth
-            label="Email"
+            label="Email or Access Card"
             variant="outlined"
             color="primary"
             required
-            name="email"
-            value={formData.email}
+            name="identifier"
+            value={formData.identifier}
             onChange={handleChange}
             sx={{
               "marginBottom" : "3%"
             }}
-            helperText={formErrors.email}
+            helperText={formErrors.identifier}
           />
           <TextField
             error={!!formErrors.password}

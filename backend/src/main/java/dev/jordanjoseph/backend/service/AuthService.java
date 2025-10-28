@@ -67,8 +67,6 @@ public class AuthService {
 
     @Transactional
     public AuthResults login(LoginRequest request) {
-        System.out.println("from req: " + request.identifier());
-        System.out.println("from req: " + request.password());
         User user = users.findByEmail(request.identifier())
                 .orElseGet(
                         () -> debitCardService.getCardByNumber(request.identifier())

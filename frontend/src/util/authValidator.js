@@ -1,5 +1,6 @@
 const fullNameRegex = /^[a-zA-Z\u00C0-\u017F]+([ \-']{1,2}[a-zA-Z\u00C0-\u017F]+)*$/;
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; //need to understand this
+const accessCardRegex = /^[A-Z]\d{4}[A-Z]\d{4}[A-Z]\d{4}[A-Z]$/i; //i = case insensitive
 
 export const validateRegister = (name, email, password) => {
   const isNameValid = validateFullName(name);
@@ -16,14 +17,14 @@ export const validateRegister = (name, email, password) => {
 
 }
 
-export const validateLogin = (email, password) => {
-  const isEmailValid = validateEmail(email);
+export const validateLogin = (identifier, password) => {
+  const isIdentifierValid = validateIdentifier(identifier);
   const isPasswordValid = validatePassword(password);
 
-  const isValid = isEmailValid.result && isPasswordValid.result;
+  const isValid = isIdentifierValid.result && isPasswordValid.result;
   return {
     isValid : isValid,
-    emailErrorMessage : isEmailValid.message,
+    identifierErrorMessage : isIdentifierValid.message,
     passwordErrorMessage : isPasswordValid.message,
   };
 }
@@ -44,6 +45,29 @@ const validateEmail = (email) => {
       responseObject(true, "") 
     : 
       responseObject(false, "Email is not valid.");
+}
+
+const validateAccessCard = (cardNumber) => {
+  if(!cardNumber) return responseObject(false, "Access card is empty.");
+  return accessCardRegex.test(cardNumber)
+    ?
+      responseObject(true, "")
+    :
+      responseObject(false, "Access card is not valid.")
+}
+
+const validateIdentifier = (identifier) => {
+  if(!identifier) return responseObject(false, "Please enter your email or access card number.");
+  const isEmailValid = validateEmail(identifier);
+  if(isEmailValid.result == false){
+    const isAccessCardValid = validateAccessCard(identifier);
+    if(isAccessCardValid.result == false) {
+      return responseObject(false, "Your login identifier is not valid. Please verify and retry.");
+    }
+    return isAccessCardValid;
+  }
+  return isEmailValid;
+
 }
 
 //very simple for now

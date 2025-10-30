@@ -1,13 +1,15 @@
 import { useState } from "react";
-import { useAuthContext, useRefreshToken } from "../../hooks/useAuthentication";
+import { useAuthContext } from "../../hooks/useAuthentication";
 import { FRONT_END_ROUTES } from "../../util/routes";
+import { Box, useTheme } from "@mui/material";
+import Banner from "../layouts/Banner";
 
 const Dashboard = () => {
   const [accounts, setAccounts] = useState(null);
 
+  const { authDetails } = useAuthContext();
 
-  const auth = useAuthContext();
-
+  const theme = useTheme();
 
 
 
@@ -15,11 +17,25 @@ const Dashboard = () => {
   
 
   return (
-    <div>
-      {!accounts && <p>Loading...</p>}
-      {!!accounts && <p>Dashboard</p>}
-    </div>
+    <Box
+      sx={{
+        "display" : "flex",
+        "flexDirection" : "column",
+        "width" : "100%",
+        "padding" : "0% 0%",
+        
+      }}
+    >
+      <Banner
+        text={"Welcome " + authDetails.fullName}
+        textColor={ theme.palette.welcomeBanner.text }
+        bannerColor={ theme.palette.welcomeBanner.background }
+        borderColor={ theme.palette.welcomeBanner.border }
+        borderWidth={ theme.dimensions.welcomeBanner.borderWidth }        
+      />
+
+    </Box>
   );
-}
+};
 
 export default Dashboard;

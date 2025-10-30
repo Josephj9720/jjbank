@@ -32,12 +32,22 @@ const lightTheme = createTheme({
         text: "#EDF3FC",
         ripple: "#EDF3FC",
       }
+    },
+    welcomeBanner: {
+      background: "#EDF3FC",
+      text: "#054480",
+      border: "#EDF3FC",
     }
   },
   assets: {
     navbar: {
       appIcon: "src/assets/jjbank-logo-light.svg",
       appIconAria: "JJBank Logo Light",
+    }
+  },
+  dimensions: {
+    welcomeBanner: {
+      borderWidth: "5px",
     }
   }
 });
@@ -71,6 +81,11 @@ const darkTheme = createTheme({
         text: "#F3F3F3",
         ripple: "#F3F3F3",
       }
+    },
+    welcomeBanner: {
+      background: "#0C2850",
+      text: "#F3F3F3",
+      border: "#0C2850",
     }
   },
   assets: {
@@ -78,8 +93,13 @@ const darkTheme = createTheme({
       appIcon: "src/assets/jjbank-logo-dark.svg",
       appIconAria: "JJBank Logo Dark",
     }
+  },
+  dimensions: {
+    welcomeBanner: {
+      borderWidth: "0px",
+    }
   }
-})
+});
 
 
 export default getTheme;

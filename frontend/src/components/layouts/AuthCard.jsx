@@ -5,9 +5,12 @@ const AuthCard = ({ children }) => {
   return (
     <Box
       display={"flex"}
-      height={"93.5vh"}
+      height={"100%"}
       justifyContent={"center"}
       padding={"1%"}
+      sx={{
+        "flexGrow" : "1",
+      }}
     >
       <Card
         sx={{

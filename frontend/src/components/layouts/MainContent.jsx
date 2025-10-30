@@ -6,11 +6,15 @@ const MainContent = ({ children }) => {
       component="main"
       sx={{
         "display" : "flex",
+        "flexDirection" : "column",
         "minHeight" : "100%",
         "margin" : "0",
-        "paddingTop" : (theme) => `${theme.mixins.toolbar.minHeight}px`,
       }}
     >
+      <Box 
+        className="toolbarOffset"
+        sx={ (theme) => theme.mixins.toolbar }
+      ></Box>
       {children}
     </Box>
   );

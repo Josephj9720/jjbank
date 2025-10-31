@@ -4,7 +4,6 @@ import { FRONT_END_ROUTES } from "../../util/routes";
 import { Box, useTheme } from "@mui/material";
 import Banner from "../layouts/Banner";
 
-
 const Dashboard = () => {
   const [accounts, setAccounts] = useState(null);
 
@@ -32,9 +31,9 @@ const Dashboard = () => {
         textColor={ theme.palette.welcomeBanner.text }
         bannerColor={ theme.palette.welcomeBanner.background }
         borderColor={ theme.palette.welcomeBanner.border }
-        borderWidth={ theme.layout.welcomeBanner.borderWidth }        
+        borderWidth={ theme.layout.welcomeBanner.borderWidth }
+        margin="0 0 2% 0"      
       />
-
 
     </Box>
   );

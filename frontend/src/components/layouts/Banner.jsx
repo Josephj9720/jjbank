@@ -5,7 +5,8 @@ const Banner = ({
   textColor = "black", 
   bannerColor = "white", 
   borderColor = "black", 
-  borderWidth = "1px" }) => {
+  borderWidth = "1px",
+  margin = "0" }) => {
 
   return (
     <Box
@@ -17,7 +18,8 @@ const Banner = ({
         "backgroundColor" : bannerColor,
         "borderColor" : borderColor,
         "borderBottom" : `${borderWidth} solid`,
-        "padding" : "3.5%"
+        "padding" : "3.5%",
+        "margin" : margin,
       }}
     >
       <Typography

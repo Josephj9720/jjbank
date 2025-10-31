@@ -16,8 +16,7 @@ const Banner = ({
         "textAlign" : "left",
         "color" : textColor,
         "backgroundColor" : bannerColor,
-        "borderColor" : borderColor,
-        "borderBottom" : `${borderWidth} solid`,
+        "borderBottom" : `${borderWidth} solid ${borderColor}`,
         "padding" : "3.5%",
         "margin" : margin,
       }}

@@ -45,7 +45,7 @@ const lightTheme = createTheme({
       appIconAria: "JJBank Logo Light",
     }
   },
-  dimensions: {
+  layout: {
     welcomeBanner: {
       borderWidth: "5px",
     }
@@ -94,7 +94,7 @@ const darkTheme = createTheme({
       appIconAria: "JJBank Logo Dark",
     }
   },
-  dimensions: {
+  layout: {
     welcomeBanner: {
       borderWidth: "0px",
     }

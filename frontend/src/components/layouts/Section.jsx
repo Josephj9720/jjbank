@@ -19,7 +19,7 @@ const Section = ({
         "display": "flex",
         "flexDirection": "column",
         "margin": {
-          "xs": "0%",
+          "xs": "0% 0% 2% 0%",
           "sm": margin,
         },
         "padding": padding,

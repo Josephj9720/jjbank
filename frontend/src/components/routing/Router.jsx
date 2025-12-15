@@ -18,6 +18,7 @@ function Router() {
         <Route path={FRONT_END_ROUTES.REGISTER} element={<PublicRoute><Register/></PublicRoute>}/>
         <Route path={FRONT_END_ROUTES.DASHBOARD} element={<ProtectedRoute><Dashboard/></ProtectedRoute>}/>
         <Route path={FRONT_END_ROUTES.ACCOUNTS + FRONT_END_ROUTES.ACCOUNT_ID} element={<ProtectedRoute><p>accounts</p></ProtectedRoute>}/>
+        <Route path={FRONT_END_ROUTES.CREATE} element={<ProtectedRoute><p>create</p></ProtectedRoute>}/>
         <Route path={FRONT_END_ROUTES.TRANSFER} element={<ProtectedRoute><p>transfer</p></ProtectedRoute>}/>
         <Route path={FRONT_END_ROUTES.LOGOUT} element={<Logout/>}></Route>
       </Route>

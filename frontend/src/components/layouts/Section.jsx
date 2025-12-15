@@ -14,7 +14,6 @@ const Section = ({
     <Box
       component={component}
       {...componentProps}
-      text
       sx={{
         "display": "flex",
         "flexDirection": "column",

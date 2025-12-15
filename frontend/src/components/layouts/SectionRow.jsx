@@ -1,9 +1,10 @@
 import { Box } from "@mui/material";
 
-const SectionRow = ({ children }) => {
+const SectionRow = ({ children, component }) => {
 
   return (
     <Box
+      component={component}
       sx={{
         "display": "flex",
         "flexDirection": "row",

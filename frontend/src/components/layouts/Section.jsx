@@ -1,7 +1,8 @@
 import { Box } from "@mui/material";
 
 const Section = ({ 
-  children, 
+  children,
+  component = "div", 
   sectionColor = "white", 
   borderColor = "black", 
   borderWidth = "1px", 
@@ -9,6 +10,7 @@ const Section = ({
   padding = "0%", }) => {
   return (
     <Box
+      component={component}
       sx={{
         "display": "flex",
         "flexDirection": "column",

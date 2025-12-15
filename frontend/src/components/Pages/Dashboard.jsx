@@ -7,6 +7,8 @@ import Section from "../layouts/Section";
 import SectionRow from "../layouts/SectionRow";
 import api from "../../util/apiClient";
 import { API_ENDPOINTS } from "../../util/endpoints";
+import { Link as ReactRouterLink } from "react-router";
+import { AddCircleOutlineOutlined } from "@mui/icons-material";
 
 const Dashboard = () => {
   const [accounts, setAccounts] = useState([]);
@@ -45,7 +47,12 @@ const Dashboard = () => {
 
   const accountListItems = accounts.map(account => 
     <div key={account.id}>
-      <SectionRow>
+      <SectionRow
+        component={ReactRouterLink}
+        componentProps={{
+          to: `${FRONT_END_ROUTES.ACCOUNTS}/${account.id}`,
+        }}
+      >
         <Typography
           variant="body1"
           color={ theme.palette.section.secondaryText }
@@ -149,6 +156,33 @@ const Dashboard = () => {
           }}
         />
         {accountListItems}
+      </Section>
+
+      <Section
+        component={ ReactRouterLink }
+        componentProps={{
+          to: FRONT_END_ROUTES.CREATE,
+        }}
+        sectionColor={ theme.palette.section.background }
+        borderColor={ theme.palette.section.border }
+        borderWidth={ theme.layout.section.borderWidth }
+        margin={ theme.layout.section.alignment.right }
+        padding="0.5%"
+      >
+        <Typography
+          variant="body1"
+          color={ theme.palette.section.secondaryText }
+          sx={{
+            "display": "flex",
+            "alignItems": "center",
+            "justifyContent": "center",
+            "gap": "0.5%"
+          }}
+        >
+          <AddCircleOutlineOutlined/>
+          Create additonal account
+        </Typography>
+
       </Section>
 
     </Box>

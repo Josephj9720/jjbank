@@ -122,7 +122,7 @@ const darkTheme = createTheme({
       alignment: {
         left: "0% 28% 2% 16%",
         right: "0% 16% 2% 28%",
-        center: "2% 22% 0% 22%",
+        center: "0% 22% 2% 22%",
       },
       borderWidth: "0px",
     }

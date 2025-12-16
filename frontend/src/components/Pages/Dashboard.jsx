@@ -13,6 +13,8 @@ import { AddCircleOutlineOutlined } from "@mui/icons-material";
 const Dashboard = () => {
   const [accounts, setAccounts] = useState([]);
 
+  const ACCOUNT_NUMBER_LIMIT = 3;
+
   const { authDetails } = useAuthContext();
 
   const MY_ACCOUNTS = "/me";
@@ -73,7 +75,7 @@ const Dashboard = () => {
             "marginLeft": "auto",
           }}
         >
-          {account.balance.toFixed(2)} $
+          {account.balance.toFixed(2)} $J
         </Typography>
       </SectionRow>
       <Divider
@@ -146,7 +148,7 @@ const Dashboard = () => {
               "marginLeft": "auto",
             }}
           >
-            <b>{ accountSumOfBalances }$</b>
+            <b>{ accountSumOfBalances } $J</b>
           </Typography>
         </SectionRow>
         <Divider
@@ -158,7 +160,7 @@ const Dashboard = () => {
         {accountListItems}
       </Section>
 
-      <Section
+      { accounts.length < ACCOUNT_NUMBER_LIMIT && <Section
         component={ ReactRouterLink }
         componentProps={{
           to: FRONT_END_ROUTES.CREATE,
@@ -183,7 +185,7 @@ const Dashboard = () => {
           Create additonal account
         </Typography>
 
-      </Section>
+      </Section>}
 
     </Box>
   );

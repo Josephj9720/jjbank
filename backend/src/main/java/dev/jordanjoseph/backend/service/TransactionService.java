@@ -46,7 +46,7 @@ public class TransactionService {
         if(idemKey != null && !idemKey.isBlank()) {
             if(idempotencyKeyRepository.existsByOwnerIdAndKeyValue(ownerId, idemKey)) {
                 //operation already processed - return a generic (idempotent) result
-                return new AccountView(account.getId(), account.getBalance());
+                return new AccountView(account.getId(), account.getType().toString(), account.getBalance());
             }
         }
 
@@ -69,7 +69,7 @@ public class TransactionService {
             idempotencyKeyRepository.save(key);
         }
 
-        return new AccountView(account.getId(), account.getBalance());
+        return new AccountView(account.getId(), account.getType().toString(), account.getBalance());
     }
 
     @Transactional
@@ -83,7 +83,7 @@ public class TransactionService {
         if(idemKey != null && !idemKey.isBlank()) {
             if(idempotencyKeyRepository.existsByOwnerIdAndKeyValue(ownerId, idemKey)) {
                 //operation already processed - return generic (idempotent) result
-                return new AccountView(account.getId(), account.getBalance());
+                return new AccountView(account.getId(), account.getType().toString(), account.getBalance());
             }
         }
 
@@ -107,7 +107,7 @@ public class TransactionService {
             idempotencyKeyRepository.save(key);
         }
 
-        return new AccountView(account.getId(), account.getBalance());
+        return new AccountView(account.getId(), account.getType().toString(), account.getBalance());
     }
 
     @Transactional

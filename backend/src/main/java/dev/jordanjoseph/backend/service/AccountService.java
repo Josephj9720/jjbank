@@ -33,7 +33,7 @@ public class AccountService {
     public List<AccountView> myAccounts() {
         return accountValidator.getCurrentUserAccounts()
                 .stream()
-                .map(account -> new AccountView(account.getId(), account.getBalance()))
+                .map(account -> new AccountView(account.getId(), account.getType().toString(), account.getBalance()))
                 .toList();
     }
 

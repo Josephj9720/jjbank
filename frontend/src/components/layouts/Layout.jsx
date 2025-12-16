@@ -1,19 +1,25 @@
 import { Outlet } from "react-router";
 import Navbar from "./Navbar";
-import { Toolbar } from "@mui/material";
+import MainContent from "./MainContent";
+import { Box, Toolbar } from "@mui/material";
 import Footer from "./Footer";
 
 const Layout = () => {
   return (
-    <>
+    <Box 
+      sx={{ 
+        "display" : "flex", 
+        "flexDirection" : "column",
+        "height" : "100vh",
+      }}
+    >
       <Navbar /> {/* same navbar on every page */}
-      <Toolbar /> {/* for spacing, so that content start below main toolbar */}
-      <main>
+      <MainContent>
         <Outlet /> {/* Renders the current page component */}
-      </main>
+      </MainContent>
       <Footer />
-    </>
+    </Box>
   );
 }
 
-export default Layout;
+export default Layout;  

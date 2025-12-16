@@ -3,6 +3,7 @@ package dev.jordanjoseph.backend.advice;
 import dev.jordanjoseph.backend.exception.AccountLimitReachedException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -40,6 +41,15 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.FORBIDDEN)
     public Map<String, Object> handleAccessDenied(AccessDeniedException e, HttpServletRequest request) {
         return body(HttpStatus.FORBIDDEN, e.getMessage(), request);
+    }
+
+    /** catches BadCredentialsExceptions thrown, returns HTTP 401 Unauthorized with the JSON body
+     * the error is triggered when a user tries to authenticate with bad or missing credentials
+     */
+    @ExceptionHandler(BadCredentialsException.class)
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    public Map<String, Object> handleBadCredentials(BadCredentialsException e, HttpServletRequest request) {
+        return body(HttpStatus.UNAUTHORIZED, e.getMessage(), request);
     }
 
     /** catches IllegalArgumentExceptions thrown, returns HTTP 400 Bad Request with the JSON body

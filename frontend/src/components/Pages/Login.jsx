@@ -25,6 +25,10 @@ const Login = () => {
 
   const [failedLogin, setFailedLogin] = useState(false);
 
+  const [loginErrorMessage, setLoginErrorMessage] = useState(
+
+  );
+
   const auth = useAuthContext();
 
   const navigate = useNavigate();
@@ -50,7 +54,14 @@ const Login = () => {
         
       } catch (error) {
         console.log("error submitting form", error);
+        console.log("status code: ", error.response.status);
+        if(error.response.status === 500) {
+          setLoginErrorMessage("Something went wrong! Please try again later. ");
+        } else {
+          setLoginErrorMessage("You have entered incorrect information. Please verify your info and try again.");
+        }
         setFailedLogin(true);
+        
       }
     } else {
       setFormErrors({
@@ -96,7 +107,7 @@ const Login = () => {
           }}
         >
           <Typography variant="body1">
-            You have entered incorrect information. Please verify your info and try again.
+            {loginErrorMessage}
           </Typography>
         </Box> }
         <form noValidate autoComplete="off" onSubmit={handleSubmit}>

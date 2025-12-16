@@ -32,12 +32,36 @@ const lightTheme = createTheme({
         text: "#EDF3FC",
         ripple: "#EDF3FC",
       }
+    },
+    welcomeBanner: {
+      background: "#EDF3FC",
+      text: "#054480",
+      border: "#054480",
+    },
+    section: {
+      background: "#EDF3FC",
+      border: "#054480",
+      primaryText: "#051223",
+      secondaryText: "#054480",
     }
   },
   assets: {
     navbar: {
       appIcon: "src/assets/jjbank-logo-light.svg",
       appIconAria: "JJBank Logo Light",
+    }
+  },
+  layout: {
+    welcomeBanner: {
+      borderWidth: "5px",
+    },
+    section: {
+      alignment: {
+        left: "0% 28% 2% 16%",
+        right: "0% 16% 2% 28%",
+        center: "2% 22% 0% 22%",
+      },
+      borderWidth: "5px",
     }
   }
 });
@@ -71,6 +95,17 @@ const darkTheme = createTheme({
         text: "#F3F3F3",
         ripple: "#F3F3F3",
       }
+    },
+    welcomeBanner: {
+      background: "#0C2850",
+      text: "#F3F3F3",
+      border: "#0C2850",
+    },
+    section: {
+      background: "#0C2850",
+      border: "#0C2850",
+      primaryText: "#F3F3F3",
+      secondaryText: "#EDF3FC",
     }
   },
   assets: {
@@ -78,8 +113,21 @@ const darkTheme = createTheme({
       appIcon: "src/assets/jjbank-logo-dark.svg",
       appIconAria: "JJBank Logo Dark",
     }
+  },
+  layout: {
+    welcomeBanner: {
+      borderWidth: "0px",
+    },
+    section: {
+      alignment: {
+        left: "0% 28% 2% 16%",
+        right: "0% 16% 2% 28%",
+        center: "0% 22% 2% 22%",
+      },
+      borderWidth: "0px",
+    }
   }
-})
+});
 
 
 export default getTheme;

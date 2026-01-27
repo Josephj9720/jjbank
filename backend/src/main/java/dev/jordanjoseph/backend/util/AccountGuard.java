@@ -1,10 +1,8 @@
 package dev.jordanjoseph.backend.util;
 
 import dev.jordanjoseph.backend.config.AuthenticationFacade;
-import dev.jordanjoseph.backend.model.Account;
 
 import dev.jordanjoseph.backend.model.UserPrincipal;
-import dev.jordanjoseph.backend.repository.AccountRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 
@@ -14,11 +12,10 @@ import org.springframework.stereotype.Component;
 import java.math.BigDecimal;
 import java.util.Collection;
 
-import java.util.List;
 import java.util.UUID;
 
 @Component
-public class AccountValidator {
+public class AccountGuard {
 
     @Autowired
     AuthenticationFacade authenticationFacade;

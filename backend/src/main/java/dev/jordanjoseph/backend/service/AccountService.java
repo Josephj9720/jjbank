@@ -7,7 +7,7 @@ import dev.jordanjoseph.backend.model.Account;
 import dev.jordanjoseph.backend.model.User;
 import dev.jordanjoseph.backend.repository.AccountRepository;
 import dev.jordanjoseph.backend.repository.UserRepository;
-import dev.jordanjoseph.backend.util.AccountValidator;
+import dev.jordanjoseph.backend.util.AccountGuard;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
@@ -24,7 +24,7 @@ public class AccountService {
     private AccountRepository accountRepository;
 
     @Autowired
-    private AccountValidator accountValidator;
+    private AccountGuard accountGuard;
 
     @Autowired
     private UserRepository userRepository;
@@ -55,7 +55,7 @@ public class AccountService {
     @Transactional
     public void createForUser(UUID userId, String type) {
         //create for the specified userId if the current user owns the account or is an admin
-        accountValidator.requireOwned(userId);
+        accountGuard.requireOwned(userId);
         User user = userRepository.findById(userId).orElseThrow(() -> new UsernameNotFoundException("User not found"));
         createForUser(user, type);
     }

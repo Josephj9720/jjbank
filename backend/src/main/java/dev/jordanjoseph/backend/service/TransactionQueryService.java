@@ -4,11 +4,10 @@ import dev.jordanjoseph.backend.dto.transactionhistory.BasicTransactionView;
 import dev.jordanjoseph.backend.dto.transactionhistory.TransactionView;
 import dev.jordanjoseph.backend.dto.transactionhistory.TransferInTransactionView;
 import dev.jordanjoseph.backend.dto.transactionhistory.TransferOutTransactionView;
-import dev.jordanjoseph.backend.model.Account;
 import dev.jordanjoseph.backend.model.Transaction;
 import dev.jordanjoseph.backend.repository.AccountRepository;
 import dev.jordanjoseph.backend.repository.TransactionRepository;
-import dev.jordanjoseph.backend.util.AccountValidator;
+import dev.jordanjoseph.backend.util.AccountGuard;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -30,7 +29,7 @@ public class TransactionQueryService {
     private AccountRepository accountRepository;
 
     @Autowired
-    private AccountValidator accountValidator;
+    private AccountGuard accountGuard;
 
     public Page<TransactionView> listForAccount(
             UUID accountId,
@@ -42,7 +41,7 @@ public class TransactionQueryService {
         //verify ownership
         accountRepository.findById(accountId)
                 .orElseThrow(() -> new IllegalStateException("Account not found"));
-        accountValidator.requireOwned(accountId); //passes if admin, might want to rename method
+        accountGuard.requireOwned(accountId); //passes if admin, might want to rename method
 
         //normalize time filters/params
         if(from == null) from = Instant.EPOCH; //1, Jan, 1970

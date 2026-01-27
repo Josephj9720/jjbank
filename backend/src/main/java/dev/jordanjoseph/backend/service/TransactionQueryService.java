@@ -6,6 +6,7 @@ import dev.jordanjoseph.backend.dto.transactionhistory.TransferInTransactionView
 import dev.jordanjoseph.backend.dto.transactionhistory.TransferOutTransactionView;
 import dev.jordanjoseph.backend.model.Account;
 import dev.jordanjoseph.backend.model.Transaction;
+import dev.jordanjoseph.backend.repository.AccountRepository;
 import dev.jordanjoseph.backend.repository.TransactionRepository;
 import dev.jordanjoseph.backend.util.AccountValidator;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,6 +27,9 @@ public class TransactionQueryService {
     private TransactionRepository transactionRepository;
 
     @Autowired
+    private AccountRepository accountRepository;
+
+    @Autowired
     private AccountValidator accountValidator;
 
     public Page<TransactionView> listForAccount(
@@ -36,8 +40,9 @@ public class TransactionQueryService {
             Pageable pageable) {
 
         //verify ownership
-        Account account = accountValidator.exist(accountId);
-        accountValidator.requireOwned(account.getUser().getId()); //passes if admin, might want to rename method
+        accountRepository.findById(accountId)
+                .orElseThrow(() -> new IllegalStateException("Account not found"));
+        accountValidator.requireOwned(accountId); //passes if admin, might want to rename method
 
         //normalize time filters/params
         if(from == null) from = Instant.EPOCH; //1, Jan, 1970

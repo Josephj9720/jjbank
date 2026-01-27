@@ -30,7 +30,7 @@ public class AccountService {
     private UserRepository userRepository;
 
     @Transactional
-    public List<AccountView> myAccounts(UUID userId) {
+    public List<AccountView> listUserAccounts(UUID userId) {
         return accountRepository.findByUserId(userId)
                 .stream()
                 .map(account -> new AccountView(account.getId(), account.getType().toString(), account.getBalance()))

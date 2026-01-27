@@ -21,9 +21,6 @@ import java.util.UUID;
 public class AccountValidator {
 
     @Autowired
-    AccountRepository accountRepository;
-
-    @Autowired
     AuthenticationFacade authenticationFacade;
 
     private UUID currentUserId() {
@@ -34,11 +31,6 @@ public class AccountValidator {
     private Collection<? extends GrantedAuthority> currentUserAuthorities() {
         UserPrincipal userPrincipal = (UserPrincipal) authenticationFacade.getAuthentication().getPrincipal();
         return userPrincipal.getAuthorities();
-    }
-
-    public Account exist(UUID accountId) {
-        return accountRepository.findById(accountId)
-                .orElseThrow(() -> new IllegalStateException("Account not found"));
     }
 
     public void requireOwned(UUID userId) {

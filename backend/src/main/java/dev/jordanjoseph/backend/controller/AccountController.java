@@ -27,8 +27,9 @@ public class AccountController {
     private TransactionService transactionService;
 
     @GetMapping("/me")
-    public List<AccountView> me() {
-        return accountService.myAccounts();
+    public List<AccountView> me(Authentication authentication) {
+        UserPrincipal principal = (UserPrincipal) authentication.getPrincipal();
+        return accountService.myAccounts(principal.getId());
     }
 
     @PostMapping("/{id}/deposit")

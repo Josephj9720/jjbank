@@ -37,7 +37,7 @@ public class TransactionService {
     @Transactional
     public AccountView deposit(UUID accountId, BigDecimal amount, String idemKey) {
 
-        Account account = accountValidator.exist(accountId);
+        Account account = this.getAccount(accountId);
 
         UUID ownerId = account.getUser().getId();
         accountValidator.requireOwned(ownerId);
@@ -75,7 +75,7 @@ public class TransactionService {
     @Transactional
     public AccountView withdraw(UUID accountId, BigDecimal amount, String idemKey) {
 
-        Account account = accountValidator.exist(accountId);
+        Account account = this.getAccount(accountId);
 
         UUID ownerId = account.getUser().getId();
         accountValidator.requireOwned(ownerId);
@@ -114,7 +114,7 @@ public class TransactionService {
     public TransferResponse transfer(TransferRequest request, String idemKey) {
 
         //load sender account
-        Account from = accountValidator.exist(request.fromAccountId());
+        Account from = this.getAccount(request.fromAccountId());
         UUID senderId = from.getUser().getId();
 
         if(idemKey != null && !idemKey.isBlank()) {
@@ -126,7 +126,7 @@ public class TransactionService {
         }
 
         //load recipient account
-        Account to = accountValidator.exist(request.toAccountId());
+        Account to = this.getAccount(request.toAccountId());
 
         //ownership check: can only send from sender's own account
         accountValidator.requireOwned(senderId);
@@ -170,6 +170,11 @@ public class TransactionService {
             idempotencyKeyRepository.save(key);
         }
         return new TransferResponse(from.getId(), to.getId(), amount, sharedRef);
+    }
+
+    private Account getAccount(UUID accountId) {
+        return accountRepository.findById(accountId)
+                .orElseThrow(() -> new IllegalStateException("Account not found"));
     }
 
 

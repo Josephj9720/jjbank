@@ -30,8 +30,8 @@ public class AccountService {
     private UserRepository userRepository;
 
     @Transactional
-    public List<AccountView> myAccounts() {
-        return accountValidator.getCurrentUserAccounts()
+    public List<AccountView> myAccounts(UUID userId) {
+        return accountRepository.findByUserId(userId)
                 .stream()
                 .map(account -> new AccountView(account.getId(), account.getType().toString(), account.getBalance()))
                 .toList();

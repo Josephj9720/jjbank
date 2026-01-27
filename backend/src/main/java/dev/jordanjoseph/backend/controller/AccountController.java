@@ -26,8 +26,8 @@ public class AccountController {
     @Autowired
     private TransactionService transactionService;
 
-    @GetMapping("/me")
-    public List<AccountView> me(Authentication authentication) {
+    @GetMapping("/me/accounts")
+    public List<AccountView> getMyAccounts(Authentication authentication) {
         UserPrincipal principal = (UserPrincipal) authentication.getPrincipal();
         return accountService.listUserAccounts(principal.getId());
     }

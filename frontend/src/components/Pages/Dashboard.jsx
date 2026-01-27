@@ -17,7 +17,7 @@ const Dashboard = () => {
 
   const { authDetails } = useAuthContext();
 
-  const MY_ACCOUNTS = "/me";
+  const MY_ACCOUNTS = "/me/accounts";
 
 
   //memoized version of the method to retrieve accounts

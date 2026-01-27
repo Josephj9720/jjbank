@@ -10,7 +10,7 @@ import dev.jordanjoseph.backend.model.Transaction;
 import dev.jordanjoseph.backend.repository.AccountRepository;
 import dev.jordanjoseph.backend.repository.IdempotencyKeyRepository;
 import dev.jordanjoseph.backend.repository.TransactionRepository;
-import dev.jordanjoseph.backend.util.AccountValidator;
+import dev.jordanjoseph.backend.util.AccountGuard;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,15 +32,15 @@ public class TransactionService {
     private IdempotencyKeyRepository idempotencyKeyRepository;
 
     @Autowired
-    private AccountValidator accountValidator;
+    private AccountGuard accountGuard;
 
     @Transactional
     public AccountView deposit(UUID accountId, BigDecimal amount, String idemKey) {
 
-        Account account = accountValidator.exist(accountId);
+        Account account = this.getAccount(accountId);
 
         UUID ownerId = account.getUser().getId();
-        accountValidator.requireOwned(ownerId);
+        accountGuard.requireOwned(ownerId);
 
         //idemKey sent from client, if not present, continue as if new operation
         if(idemKey != null && !idemKey.isBlank()) {
@@ -50,7 +50,7 @@ public class TransactionService {
             }
         }
 
-        accountValidator.requirePositive(amount);
+        accountGuard.requirePositive(amount);
         account.setBalance(account.getBalance().add(amount));
 
         //persist transaction
@@ -75,10 +75,10 @@ public class TransactionService {
     @Transactional
     public AccountView withdraw(UUID accountId, BigDecimal amount, String idemKey) {
 
-        Account account = accountValidator.exist(accountId);
+        Account account = this.getAccount(accountId);
 
         UUID ownerId = account.getUser().getId();
-        accountValidator.requireOwned(ownerId);
+        accountGuard.requireOwned(ownerId);
 
         if(idemKey != null && !idemKey.isBlank()) {
             if(idempotencyKeyRepository.existsByOwnerIdAndKeyValue(ownerId, idemKey)) {
@@ -87,8 +87,8 @@ public class TransactionService {
             }
         }
 
-        accountValidator.requirePositive(amount);
-        accountValidator.requireSufficientFunds(account.getBalance(), amount);
+        accountGuard.requirePositive(amount);
+        accountGuard.requireSufficientFunds(account.getBalance(), amount);
         account.setBalance(account.getBalance().subtract(amount));
 
         //persist transaction
@@ -114,7 +114,7 @@ public class TransactionService {
     public TransferResponse transfer(TransferRequest request, String idemKey) {
 
         //load sender account
-        Account from = accountValidator.exist(request.fromAccountId());
+        Account from = this.getAccount(request.fromAccountId());
         UUID senderId = from.getUser().getId();
 
         if(idemKey != null && !idemKey.isBlank()) {
@@ -126,17 +126,17 @@ public class TransactionService {
         }
 
         //load recipient account
-        Account to = accountValidator.exist(request.toAccountId());
+        Account to = this.getAccount(request.toAccountId());
 
         //ownership check: can only send from sender's own account
-        accountValidator.requireOwned(senderId);
+        accountGuard.requireOwned(senderId);
 
         //can't transfer to same account
-        accountValidator.requireNotSame(from.getId(), to.getId());
+        accountGuard.requireNotSame(from.getId(), to.getId());
 
         BigDecimal amount = request.amount();
-        accountValidator.requirePositive(amount);
-        accountValidator.requireSufficientFunds(from.getBalance(), amount);
+        accountGuard.requirePositive(amount);
+        accountGuard.requireSufficientFunds(from.getBalance(), amount);
 
         //compute shared reference, if not sent by client, create reference
         String sharedRef = request.reference() != null && !request.reference().isBlank()
@@ -170,6 +170,11 @@ public class TransactionService {
             idempotencyKeyRepository.save(key);
         }
         return new TransferResponse(from.getId(), to.getId(), amount, sharedRef);
+    }
+
+    private Account getAccount(UUID accountId) {
+        return accountRepository.findById(accountId)
+                .orElseThrow(() -> new IllegalStateException("Account not found"));
     }
 
 

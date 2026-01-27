@@ -1,10 +1,8 @@
 package dev.jordanjoseph.backend.util;
 
 import dev.jordanjoseph.backend.config.AuthenticationFacade;
-import dev.jordanjoseph.backend.model.Account;
 
 import dev.jordanjoseph.backend.model.UserPrincipal;
-import dev.jordanjoseph.backend.repository.AccountRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 
@@ -14,14 +12,10 @@ import org.springframework.stereotype.Component;
 import java.math.BigDecimal;
 import java.util.Collection;
 
-import java.util.List;
 import java.util.UUID;
 
 @Component
-public class AccountValidator {
-
-    @Autowired
-    AccountRepository accountRepository;
+public class AccountGuard {
 
     @Autowired
     AuthenticationFacade authenticationFacade;
@@ -34,15 +28,6 @@ public class AccountValidator {
     private Collection<? extends GrantedAuthority> currentUserAuthorities() {
         UserPrincipal userPrincipal = (UserPrincipal) authenticationFacade.getAuthentication().getPrincipal();
         return userPrincipal.getAuthorities();
-    }
-
-    public List<Account> getCurrentUserAccounts() {
-        return accountRepository.findByUserId(currentUserId());
-    }
-
-    public Account exist(UUID accountId) {
-        return accountRepository.findById(accountId)
-                .orElseThrow(() -> new IllegalStateException("Account not found"));
     }
 
     public void requireOwned(UUID userId) {

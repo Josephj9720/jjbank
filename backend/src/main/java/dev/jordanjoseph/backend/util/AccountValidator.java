@@ -36,10 +36,6 @@ public class AccountValidator {
         return userPrincipal.getAuthorities();
     }
 
-    public List<Account> getCurrentUserAccounts() {
-        return accountRepository.findByUserId(currentUserId());
-    }
-
     public Account exist(UUID accountId) {
         return accountRepository.findById(accountId)
                 .orElseThrow(() -> new IllegalStateException("Account not found"));

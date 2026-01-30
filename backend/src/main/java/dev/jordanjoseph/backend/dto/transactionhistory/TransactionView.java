@@ -14,5 +14,5 @@ public sealed interface TransactionView permits BasicTransactionView, IncomingEx
     Transaction.Type type();
     BigDecimal amount();
     String reference();
-    Instant createdAt();
+    String date();
 }

@@ -8,6 +8,7 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "transactions")
+@Inheritance(strategy = InheritanceType.JOINED)
 public class Transaction {
 
     public enum Type { DEPOSIT, WITHDRAW, TRANSFER_IN, TRANSFER_OUT }

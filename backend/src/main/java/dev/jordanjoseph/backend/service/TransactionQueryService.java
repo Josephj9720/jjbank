@@ -2,8 +2,8 @@ package dev.jordanjoseph.backend.service;
 
 import dev.jordanjoseph.backend.dto.transactionhistory.BasicTransactionView;
 import dev.jordanjoseph.backend.dto.transactionhistory.TransactionView;
-import dev.jordanjoseph.backend.dto.transactionhistory.TransferInTransactionView;
-import dev.jordanjoseph.backend.dto.transactionhistory.TransferOutTransactionView;
+import dev.jordanjoseph.backend.dto.transactionhistory.IncomingInternalTransferView;
+import dev.jordanjoseph.backend.dto.transactionhistory.OutgoingInternalTransferView;
 import dev.jordanjoseph.backend.model.Transaction;
 import dev.jordanjoseph.backend.repository.AccountRepository;
 import dev.jordanjoseph.backend.repository.TransactionRepository;
@@ -14,6 +14,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.UUID;
 
@@ -64,34 +67,32 @@ public class TransactionQueryService {
         return switch (t.getType()) {
             case DEPOSIT, WITHDRAW
                     -> new BasicTransactionView(
-                            t.getId(), t.getType(), t.getAmount(), t.getReference(), t.getCreatedAt());
-
-            case TRANSFER_IN -> {
-                Transaction sender = getComplementaryTransaction(t.getReference(), t.getAccount().getId());
-                yield new TransferInTransactionView(
                         t.getId(),
                         t.getType(),
                         t.getAmount(),
                         t.getReference(),
-                        t.getCreatedAt(),
-                        t.getAccount().getId(),
-                        t.getAccount().getUser().getFullName(),
-                        t.getAccount().getUser().getEmail(),
-                        sender.getAccount().getUser().getFullName());
+                        getDateFromInstant(t.getCreatedAt()));
+
+            case TRANSFER_IN -> {
+                Transaction sender = getComplementaryTransaction(t.getReference(), t.getAccount().getId());
+                yield new IncomingInternalTransferView(
+                        t.getType(),
+                        t.getAmount(),
+                        t.getReference(),
+                        getDateFromInstant(t.getCreatedAt()),
+                        sender.getAccount().getType(),
+                        sender.getAccount().getId());
             }
 
             case TRANSFER_OUT -> {
                 Transaction recipient = getComplementaryTransaction(t.getReference(), t.getAccount().getId());
-                yield new TransferOutTransactionView(
-                        t.getId(),
+                yield new OutgoingInternalTransferView(
                         t.getType(),
                         t.getAmount(),
                         t.getReference(),
-                        t.getCreatedAt(),
-                        t.getAccount().getId(),
-                        t.getAccount().getUser().getFullName(),
-                        t.getAccount().getUser().getEmail(),
-                        recipient.getAccount().getUser().getFullName());
+                        getDateFromInstant(t.getCreatedAt()),
+                        recipient.getAccount().getType(),
+                        recipient.getAccount().getId());
             }
         };
     }
@@ -114,6 +115,16 @@ public class TransactionQueryService {
         }
 
         return transactions.getFirst();
+    }
+
+    private String getDateFromInstant(Instant instant) {
+        LocalDate localDate = LocalDate.ofInstant(instant, ZoneId.systemDefault());
+
+        //format date (EE, MMM dd, yyyy)
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("EE, MMM dd, yyyy");
+        localDate.format(formatter);
+
+        return localDate.toString();
     }
 
 }

@@ -1,5 +1,6 @@
 package dev.jordanjoseph.backend.dto.transactionhistory;
 
+import dev.jordanjoseph.backend.model.Account;
 import dev.jordanjoseph.backend.model.Transaction;
 
 import java.math.BigDecimal;
@@ -11,9 +12,7 @@ public record IncomingInternalTransferView(
         Transaction.Type type,
         BigDecimal amount,
         String reference,
-        Instant createdAt,
-        UUID recipientId,
-        String recipientName,
-        String recipientEmail,
-        String senderName
+        String date,
+        Account.Type accountType,
+        UUID depositedToAccount
 ) implements TransactionView {}

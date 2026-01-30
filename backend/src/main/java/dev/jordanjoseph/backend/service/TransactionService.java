@@ -143,7 +143,7 @@ public class TransactionService {
 
         //compute shared reference, if not sent by client, create reference
         String sharedRef = request.reference() != null && !request.reference().isBlank()
-                ? request.reference()
+                ? request.reference() + " - " + Instant.now().toEpochMilli() //ensure uniqueness
                 : "TX-" + Instant.now().toEpochMilli();
 
         //execute operations

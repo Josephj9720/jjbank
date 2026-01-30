@@ -1,8 +1,8 @@
 package dev.jordanjoseph.backend.service;
 
 import dev.jordanjoseph.backend.dto.account.AccountView;
-import dev.jordanjoseph.backend.dto.transfer.TransferRequest;
-import dev.jordanjoseph.backend.dto.transfer.TransferResponse;
+import dev.jordanjoseph.backend.dto.transfer.InternalTransferRequest;
+import dev.jordanjoseph.backend.dto.transfer.InternalTransferResponse;
 
 import dev.jordanjoseph.backend.model.Account;
 import dev.jordanjoseph.backend.model.IdempotencyKey;
@@ -111,25 +111,28 @@ public class TransactionService {
     }
 
     @Transactional
-    public TransferResponse transfer(TransferRequest request, String idemKey) {
+    public InternalTransferResponse internalTransfer(InternalTransferRequest request, String idemKey) {
 
-        //load sender account
+        //load source account
         Account from = this.getAccount(request.fromAccountId());
-        UUID senderId = from.getUser().getId();
+        UUID fromUserId = from.getUser().getId();
 
         if(idemKey != null && !idemKey.isBlank()) {
-            if(idempotencyKeyRepository.existsByOwnerIdAndKeyValue(senderId, idemKey)) {
-                return new TransferResponse(
+            if(idempotencyKeyRepository.existsByOwnerIdAndKeyValue(fromUserId, idemKey)) {
+                return new InternalTransferResponse(
                         request.fromAccountId(), request.toAccountId(), request.amount(), request.reference()
                 );
             }
         }
 
-        //load recipient account
+        //load destination account
         Account to = this.getAccount(request.toAccountId());
+        UUID toUserId = to.getUser().getId();
 
-        //ownership check: can only send from sender's own account
-        accountGuard.requireOwned(senderId);
+        //ownership check: can only send from user's own account
+        accountGuard.requireOwned(fromUserId);
+        //make sure destination account also belong to user
+        accountGuard.requireOwned(toUserId);
 
         //can't transfer to same account
         accountGuard.requireNotSame(from.getId(), to.getId());
@@ -165,11 +168,11 @@ public class TransactionService {
         //record idempotency after success
         if(idemKey != null && !idemKey.isBlank()) {
             IdempotencyKey key = new IdempotencyKey();
-            key.setOwnerId(senderId);
+            key.setOwnerId(fromUserId);
             key.setKeyValue(idemKey);
             idempotencyKeyRepository.save(key);
         }
-        return new TransferResponse(from.getId(), to.getId(), amount, sharedRef);
+        return new InternalTransferResponse(from.getId(), to.getId(), amount, sharedRef);
     }
 
     private Account getAccount(UUID accountId) {

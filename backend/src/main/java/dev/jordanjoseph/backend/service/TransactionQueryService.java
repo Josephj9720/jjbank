@@ -1,6 +1,7 @@
 package dev.jordanjoseph.backend.service;
 
 import dev.jordanjoseph.backend.dto.transactionhistory.*;
+import dev.jordanjoseph.backend.model.Account;
 import dev.jordanjoseph.backend.model.ExternalTransfer;
 import dev.jordanjoseph.backend.model.Transaction;
 import dev.jordanjoseph.backend.repository.AccountRepository;
@@ -40,9 +41,10 @@ public class TransactionQueryService {
             Pageable pageable) {
 
         //verify ownership
-        accountRepository.findById(accountId)
+        Account account = accountRepository.findById(accountId)
                 .orElseThrow(() -> new IllegalStateException("Account not found"));
-        accountGuard.requireOwned(accountId); //passes if admin, might want to rename method
+        UUID userId = account.getUser().getId();
+        accountGuard.requireOwned(userId); //passes if admin, might want to rename method
 
         //normalize time filters/params
         if(from == null) from = Instant.EPOCH; //1, Jan, 1970

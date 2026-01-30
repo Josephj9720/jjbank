@@ -12,6 +12,6 @@ public record OutgoingInternalTransferView(
         BigDecimal amount,
         String reference,
         String date,
-        Account.Type accountType,
-        UUID debitedFromAccount
+        Account.Type depositedToAccountType,
+        UUID depositedToAccount
 ) implements TransactionView {}

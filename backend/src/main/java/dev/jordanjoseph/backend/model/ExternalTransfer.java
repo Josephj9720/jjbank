@@ -6,7 +6,6 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 
 @Entity
 public class ExternalTransfer extends Transaction {
@@ -34,5 +33,14 @@ public class ExternalTransfer extends Transaction {
 
     public void setExpiresAt(Instant expiresAt) {
         this.expiresAt = expiresAt;
+    }
+
+    //to prevent setting ExternalTransfers to enums WITHDRAW AND DEPOSIT
+    @Override
+    public void setType(Type type) {
+        if(type != Type.TRANSFER_IN && type != Type.TRANSFER_OUT) {
+            throw new IllegalArgumentException("ExternalTransfer can only be of type TRANSFER_IN or TRANSFER_OUT");
+        }
+        super.setType(type);
     }
 }

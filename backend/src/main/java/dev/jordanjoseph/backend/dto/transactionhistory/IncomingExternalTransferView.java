@@ -1,5 +1,6 @@
 package dev.jordanjoseph.backend.dto.transactionhistory;
 
+import dev.jordanjoseph.backend.model.Account;
 import dev.jordanjoseph.backend.model.ExternalTransfer;
 import dev.jordanjoseph.backend.model.Transaction;
 
@@ -11,6 +12,7 @@ public record IncomingExternalTransferView(
         BigDecimal amount,
         String reference,
         String date,
+        Account.Type toAccountType,
         UUID toAccount,
         String recipientName,
         String recipientEmail,

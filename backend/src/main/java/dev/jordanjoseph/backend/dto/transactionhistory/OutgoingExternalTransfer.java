@@ -12,7 +12,7 @@ public record OutgoingExternalTransfer(
         BigDecimal amount,
         String reference,
         String date,
-        Account.Type accountType,
+        Account.Type fromAccountType,
         UUID fromAccount,
         String senderName,
         String recipientEmail,

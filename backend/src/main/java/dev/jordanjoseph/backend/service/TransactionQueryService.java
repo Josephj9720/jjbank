@@ -1,9 +1,7 @@
 package dev.jordanjoseph.backend.service;
 
-import dev.jordanjoseph.backend.dto.transactionhistory.BasicTransactionView;
-import dev.jordanjoseph.backend.dto.transactionhistory.TransactionView;
-import dev.jordanjoseph.backend.dto.transactionhistory.IncomingInternalTransferView;
-import dev.jordanjoseph.backend.dto.transactionhistory.OutgoingInternalTransferView;
+import dev.jordanjoseph.backend.dto.transactionhistory.*;
+import dev.jordanjoseph.backend.model.ExternalTransfer;
 import dev.jordanjoseph.backend.model.Transaction;
 import dev.jordanjoseph.backend.repository.AccountRepository;
 import dev.jordanjoseph.backend.repository.TransactionRepository;
@@ -64,6 +62,13 @@ public class TransactionQueryService {
     }
 
     private TransactionView toView(Transaction t) {
+        return switch (t) {
+            case ExternalTransfer external -> externalTransferToView(external);
+            case Transaction internal -> internalTransactionToView(internal);
+        };
+    }
+
+    private TransactionView internalTransactionToView(Transaction t) {
         return switch (t.getType()) {
             case DEPOSIT, WITHDRAW
                     -> new BasicTransactionView(
@@ -97,12 +102,47 @@ public class TransactionQueryService {
         };
     }
 
+    private TransactionView externalTransferToView(ExternalTransfer t) {
+        return switch (t.getType()) {
+            case TRANSFER_IN -> {
+                Transaction sender = getComplementaryTransaction(t.getReference(), t.getAccount().getId());
+                yield new IncomingExternalTransferView(
+                        t.getType(),
+                        t.getAmount(),
+                        t.getReference(),
+                        getDateFromInstant(t.getCreatedAt()),
+                        t.getAccount().getType(),
+                        t.getAccount().getId(),
+                        t.getAccount().getUser().getFullName(),
+                        t.getAccount().getUser().getEmail(),
+                        sender.getAccount().getUser().getFullName(),
+                        t.getStatus());
+            }
+
+            case TRANSFER_OUT -> {
+                Transaction recipient = getComplementaryTransaction(t.getReference(), t.getAccount().getId());
+                yield new OutgoingExternalTransfer(
+                        t.getType(),
+                        t.getAmount(),
+                        t.getReference(),
+                        getDateFromInstant(t.getCreatedAt()),
+                        t.getAccount().getType(),
+                        t.getAccount().getId(),
+                        t.getAccount().getUser().getFullName(),
+                        recipient.getAccount().getUser().getEmail(),
+                        recipient.getAccount().getUser().getFullName(),
+                        t.getStatus());
+            }
+            default -> throw new IllegalStateException("Unexpected value: " + t.getType());
+        };
+    }
+
     private Transaction getComplementaryTransaction(String reference, UUID accountId) {
         List<Transaction> transactions = transactionRepository
                 .findByReferenceAndAccountIdNot(reference, accountId);
 
         for(Transaction transaction : transactions) {
-            System.out.println(transaction.getType());
+            out.println(transaction.getType());
             out.println(transaction.getId());
         }
 

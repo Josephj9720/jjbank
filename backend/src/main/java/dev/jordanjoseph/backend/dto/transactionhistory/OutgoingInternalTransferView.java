@@ -7,14 +7,13 @@ import java.time.Instant;
 import java.util.UUID;
 
 /** records can implement interfaces, auto method implementation */
-public record TransferInTransactionView(
-        UUID id,
+public record OutgoingInternalTransferView(
         Transaction.Type type,
         BigDecimal amount,
         String reference,
         Instant createdAt,
-        UUID recipientId,
-        String recipientName,
-        String recipientEmail,
-        String senderName
+        UUID senderId,
+        String senderName,
+        String senderEmail,
+        String recipientName
 ) implements TransactionView {}

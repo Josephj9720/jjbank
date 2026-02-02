@@ -92,6 +92,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public Map<String, Object> handleOther(Exception e, HttpServletRequest request) {
+        System.out.println("Error: " + e.getMessage());
         return body(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error", request);
     }
 

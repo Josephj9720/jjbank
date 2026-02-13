@@ -20,10 +20,11 @@ public class EmailTemplateConfig {
         return engine;
     }
 
-    private ITemplateResolver htmlTemplateResolver() {
+    @Bean
+    public ITemplateResolver htmlTemplateResolver() {
         //this type of template resolver is for non web content, when templates are in a JAR or the src/main/res folder
         SpringResourceTemplateResolver resolver = new SpringResourceTemplateResolver();
-        resolver.setPrefix("classpath:/templates/email/html");
+        resolver.setPrefix("classpath:/templates/email/html/");
         resolver.setSuffix(".html");
         resolver.setTemplateMode(TemplateMode.HTML);
         resolver.setCharacterEncoding("UTF-8"); //dominant encoding for world wide web
@@ -32,10 +33,11 @@ public class EmailTemplateConfig {
         return resolver;
     }
 
-    private ITemplateResolver textTemplateResolver() {
+    @Bean
+    public ITemplateResolver textTemplateResolver() {
 
         SpringResourceTemplateResolver resolver = new SpringResourceTemplateResolver();
-        resolver.setPrefix("classpath:/templates/email/text");
+        resolver.setPrefix("classpath:/templates/email/text/");
         resolver.setSuffix(".txt");
         resolver.setTemplateMode(TemplateMode.TEXT);
         resolver.setCharacterEncoding("UTF-8");

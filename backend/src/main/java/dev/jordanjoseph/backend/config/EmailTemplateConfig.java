@@ -29,6 +29,7 @@ public class EmailTemplateConfig {
         resolver.setTemplateMode(TemplateMode.HTML);
         resolver.setCharacterEncoding("UTF-8"); //dominant encoding for world wide web
         resolver.setOrder(1);
+        resolver.setCheckExistence(true); //if d.n.e. move to next resolver
 
         return resolver;
     }

@@ -4,7 +4,7 @@ Your transfer was successfully accepted and deposited.
 
       Date: [[${date}]]
       Amount: [[${amount}]]
-      To: [[${to}]]
+      To: [[${recipient}]]
       Reference: [[${reference}]]
 
 If you didn't make this transaction, please contact support immediately.

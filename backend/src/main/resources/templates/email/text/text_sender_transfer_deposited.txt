@@ -1,0 +1,12 @@
+Hello [[${Sender}]],
+
+Your transfer was successfully accepted and deposited.
+
+      Date: [[${date}]]
+      Amount: [[${amount}]]
+      To: [[${to}]]
+      Reference: [[${reference}]]
+
+If you didn't make this transaction, please contact support immediately.
+
+© 2026 JJBank

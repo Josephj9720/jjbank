@@ -5,7 +5,7 @@ Your transfer from [[${sender}]] has expired.
       Date: [[${date}]]
       Amount: $[[${amount}]] (J)
       Status: Expired
-      Reference: [[[${reference}]]
+      Reference: [[${reference}]]
 
 If you didn't make this transaction, please contact support immediately.
 

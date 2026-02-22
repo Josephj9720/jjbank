@@ -1,4 +1,4 @@
-Hello [[${Sender}]],
+Hello [[${sender}]],
 
 Your transfer was successfully accepted and deposited.
 

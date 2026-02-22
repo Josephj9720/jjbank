@@ -3,7 +3,7 @@ Hello [[${sender}]],
 Your transfer to [[${recipient}]] was cancelled.
 
       Date: [[${date}]]
-      Amount: [[${amount}]]
+      Amount: $[[${amount}]] (J)
       Status: Cancelled
       Reference: [[${reference}]]
 

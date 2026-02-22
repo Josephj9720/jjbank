@@ -3,7 +3,7 @@ Hello [[${recipient}]],
 Your transfer from [[${sender}]] has expired.
 
       Date: [[${date}]]
-      Amount: [[${amount}]]
+      Amount: $[[${amount}]] (J)
       Status: Expired
       Reference: [[[${reference}]]
 

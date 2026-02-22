@@ -3,7 +3,7 @@ Hello [[${recipient}]],
 [[${sender}]] has sent you funds. Please view the transaction to deposit your funds.
 
       Date: [[${date}]]
-      Amount: [[${amount}]]
+      Amount: $[[${amount}]] (J)
       From: [[${sender}]]
       Reference: [[${reference}]]
 	

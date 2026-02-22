@@ -3,7 +3,7 @@ Hello [[${Sender}]],
 Your transfer was successfully accepted and deposited.
 
       Date: [[${date}]]
-      Amount: [[${amount}]]
+      Amount: $[[${amount}]] (J)
       To: [[${recipient}]]
       Reference: [[${reference}]]
 

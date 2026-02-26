@@ -17,6 +17,12 @@ public class ExternalTransfer extends Transaction {
     private Status status;
 
     @Column(nullable = false)
+    private boolean reminderSent = false;
+
+    @Column(nullable = false)
+    private Instant reminderAt;
+
+    @Column(nullable = false)
     private Instant expiresAt;
 
     public Status getStatus() {
@@ -25,6 +31,22 @@ public class ExternalTransfer extends Transaction {
 
     public void setStatus(Status status) {
         this.status = status;
+    }
+
+    public boolean isReminderSent() {
+        return reminderSent;
+    }
+
+    public void setReminderSent(boolean reminderSent) {
+        this.reminderSent = reminderSent;
+    }
+
+    public Instant getReminderAt() {
+        return reminderAt;
+    }
+
+    public void setReminderAt(Instant reminderAt) {
+        this.reminderAt = reminderAt;
     }
 
     public Instant getExpiresAt() {

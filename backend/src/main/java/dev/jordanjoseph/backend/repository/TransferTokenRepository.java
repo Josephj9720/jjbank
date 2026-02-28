@@ -10,4 +10,5 @@ import java.util.UUID;
 @Repository
 public interface TransferTokenRepository extends JpaRepository<TransferToken, UUID> {
     Optional<TransferToken> findByTokenHash(String tokenHash);
+    Optional<TransferToken> findByExternalTransferId(UUID externalTransferId);
 }

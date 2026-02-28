@@ -153,7 +153,7 @@ public class TransactionQueryService {
         }
 
         if(transactions.size() > 1) {
-            throw new IllegalStateException("Expected one complimentary transaction but found multiple");
+            throw new IllegalStateException("Expected one complementary transaction but found multiple");
         }
 
         return transactions.getFirst();

@@ -10,6 +10,7 @@ import java.util.UUID;
 
 @Repository
 public interface ExternalTransferRepository extends JpaRepository<ExternalTransfer, UUID> {
+    List<ExternalTransfer> findByReferenceAndAccountIdNot(String reference, UUID accountId);
     List<ExternalTransfer> findByStatusAndExpiresAtBefore(ExternalTransfer.Status status, Instant time);
     List<ExternalTransfer> findByStatusAndReminderAtBeforeAndReminderSentFalse(ExternalTransfer.Status status, Instant time);
 }

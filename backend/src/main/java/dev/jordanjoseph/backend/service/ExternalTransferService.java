@@ -72,7 +72,7 @@ public class ExternalTransferService {
 
     private EmailContent expirePendingIncomingTransfer(ExternalTransfer incoming) {
         //invalidate transfer token
-        transferTokenRepository.findByExternalTransferId(incoming.getId())
+        transferTokenRepository.findByIncomingTransferId(incoming.getId())
                 .orElseThrow(() -> new NoSuchElementException(
                         "Transfer Token could not be found for external transfer id: " + incoming.getId()))
                 .setInvalid(true);

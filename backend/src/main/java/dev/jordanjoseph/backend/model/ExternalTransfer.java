@@ -10,7 +10,7 @@ import java.time.Instant;
 @Entity
 public class ExternalTransfer extends Transaction {
 
-    public enum Status { PENDING, COMPLETED, CANCELLED, EXPIRED }
+    public enum Status { PENDING, COMPLETED, CANCELLED, DECLINED, EXPIRED }
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

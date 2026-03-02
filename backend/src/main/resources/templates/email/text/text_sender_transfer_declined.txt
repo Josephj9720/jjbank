@@ -1,10 +1,10 @@
 Hello [[${sender}]],
 
-Your transfer to [[${recipient}]] was cancelled.
+Your transfer to [[${recipient}]] was declined.
 
       Date: [[${date}]]
       Amount: $[[${amount}]] (J)
-      Status: Cancelled
+      Status: Declined
       Reference: [[${reference}]]
 
 If you didn't make this transaction, please contact support immediately.

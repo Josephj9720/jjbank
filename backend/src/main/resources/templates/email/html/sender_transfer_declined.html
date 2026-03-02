@@ -17,7 +17,7 @@
                             <td style="padding-top:16px; font-size:16px; color:#0B1215;">
                                 Hello <span th:text="${sender}">Sender</span>,
                                 <br><br>
-                                Your transfer to <span th:text="${recipient}">Recipient</span> was cancelled.
+                                Your transfer to <span th:text="${recipient}">Recipient</span> was declined.
                             </td>
                         </tr>
                         <!-- Transaction Box -->
@@ -46,7 +46,7 @@
                                     </tr>
                                     <!-- data values 2 -->
                                     <tr>
-                                       <td id="status" style="width: 50%; font-size:14px; color:#BF4342; font-weight:bold;">Cancelled</td>
+                                       <td id="status" style="width: 50%; font-size:14px; color:#BF4342; font-weight:bold;">Declined</td>
                                        <td id="reference" style="width: 50%; font-size:14px; color:#0B1215; font-weight:bold;" th:text="${reference}">Value</td>
                                     </tr>
                                 </table>

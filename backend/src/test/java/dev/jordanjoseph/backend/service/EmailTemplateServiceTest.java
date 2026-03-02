@@ -290,12 +290,12 @@ public class EmailTemplateServiceTest {
         verifyNoMoreInteractions(templateEngine);
     }
     @Test
-    void shouldGenerateSenderTransferCancelledTemplateWithCorrectContentAndContext(){
+    void shouldGenerateSenderTransferDeclinedTemplateWithCorrectContentAndContext(){
 
         //define behaviour
-        when(templateEngine.process(eq("sender_transfer_cancelled"), any(Context.class)))
+        when(templateEngine.process(eq("sender_transfer_declined"), any(Context.class)))
                 .thenReturn("<html>HTML</html>");
-        when(templateEngine.process(eq("text_sender_transfer_cancelled"), any(Context.class)))
+        when(templateEngine.process(eq("text_sender_transfer_declined"), any(Context.class)))
                 .thenReturn("TEXT");
 
         String sender = "Yellow Knife";
@@ -305,7 +305,7 @@ public class EmailTemplateServiceTest {
         String reference = "TX-123456";
 
         //act - call method
-        EmailContent result = service.senderTransferCancelled(sender, date, amount, recipient, reference);
+        EmailContent result = service.senderTransferDeclined(sender, date, amount, recipient, reference);
 
         //assert DTO values
         assertNotNull(result, "EmailContent should not be null");
@@ -314,7 +314,7 @@ public class EmailTemplateServiceTest {
 
         //capture html Context arguments to inspect variables
         ArgumentCaptor<Context> contextCaptor = ArgumentCaptor.forClass(Context.class);
-        verify(templateEngine).process(eq("sender_transfer_cancelled"), contextCaptor.capture());
+        verify(templateEngine).process(eq("sender_transfer_declined"), contextCaptor.capture());
         Context htmlContext = contextCaptor.getValue();
 
         assertEquals(sender, htmlContext.getVariable("sender"));
@@ -325,7 +325,7 @@ public class EmailTemplateServiceTest {
 
         //capture text Context arguments to inspect variables
         ArgumentCaptor<Context> textContextCaptor = ArgumentCaptor.forClass(Context.class);
-        verify(templateEngine).process(eq("text_sender_transfer_cancelled"), textContextCaptor.capture());
+        verify(templateEngine).process(eq("text_sender_transfer_declined"), textContextCaptor.capture());
         Context textContext = textContextCaptor.getValue();
 
         assertEquals(sender, textContext.getVariable("sender"));
@@ -335,8 +335,8 @@ public class EmailTemplateServiceTest {
         assertEquals(reference, textContext.getVariable("reference"));
 
         //verify that both templates were called exactly once
-        verify(templateEngine, times(1)).process(eq("sender_transfer_cancelled"), any(Context.class));
-        verify(templateEngine, times(1)).process(eq("text_sender_transfer_cancelled"), any(Context.class));
+        verify(templateEngine, times(1)).process(eq("sender_transfer_declined"), any(Context.class));
+        verify(templateEngine, times(1)).process(eq("text_sender_transfer_declined"), any(Context.class));
 
         //verify no extra interactions
         verifyNoMoreInteractions(templateEngine);

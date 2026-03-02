@@ -118,7 +118,7 @@ public class EmailTemplateService {
         return new EmailContent(htmlContent, textContent);
     }
 
-    public EmailContent senderTransferCancelled(
+    public EmailContent senderTransferDeclined(
             String sender,
             String date,
             String amount,
@@ -132,8 +132,8 @@ public class EmailTemplateService {
         context.setVariable("recipient", recipient);
         context.setVariable("reference", reference);
 
-        String htmlContent = templateEngine.process("sender_transfer_cancelled", context);
-        String textContent = templateEngine.process("text_sender_transfer_cancelled", context);
+        String htmlContent = templateEngine.process("sender_transfer_declined", context);
+        String textContent = templateEngine.process("text_sender_transfer_declined", context);
 
         return new EmailContent(htmlContent, textContent);
     }

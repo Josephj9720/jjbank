@@ -20,6 +20,10 @@ public class Contact {
     private User recipient;
 
     private String displayName;
+    
+    private String securityQuestion;
+
+    private String securityAnswerHash;
 
     /** set by DB */
     public UUID getId() {
@@ -48,5 +52,21 @@ public class Contact {
 
     public void setDisplayName(String displayName) {
         this.displayName = displayName;
+    }
+
+    public String getSecurityQuestion() {
+        return securityQuestion;
+    }
+
+    public void setSecurityQuestion(String securityQuestion) {
+        this.securityQuestion = securityQuestion;
+    }
+
+    public String getSecurityAnswerHash() {
+        return securityAnswerHash;
+    }
+
+    public void setSecurityAnswerHash(String securityAnswerHash) {
+        this.securityAnswerHash = securityAnswerHash;
     }
 }

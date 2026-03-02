@@ -16,6 +16,9 @@ public class ExternalTransfer extends Transaction {
     @Column(nullable = false)
     private Status status;
 
+    @Column(length = 1000)
+    private String message;
+
     @Column(nullable = false)
     private boolean reminderSent = false;
 
@@ -31,6 +34,18 @@ public class ExternalTransfer extends Transaction {
 
     public void setStatus(Status status) {
         this.status = status;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        if(message == null || message.isBlank()) {
+            this.message = null;
+        } else {
+            this.message = message.trim();
+        }
     }
 
     public boolean isReminderSent() {

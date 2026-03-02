@@ -120,7 +120,7 @@ public class TransactionService {
         if(idemKey != null && !idemKey.isBlank()) {
             if(idempotencyKeyRepository.existsByOwnerIdAndKeyValue(fromUserId, idemKey)) {
                 return new InternalTransferResponse(
-                        request.fromAccountId(), request.toAccountId(), request.amount(), request.reference()
+                        request.fromAccountId(), request.toAccountId(), request.amount(), "Duplicate Request"
                 );
             }
         }
@@ -141,10 +141,8 @@ public class TransactionService {
         accountGuard.requirePositive(amount);
         accountGuard.requireSufficientFunds(from.getBalance(), amount);
 
-        //compute shared reference, if not sent by client, create reference
-        String sharedRef = request.reference() != null && !request.reference().isBlank()
-                ? request.reference() + " - " + Instant.now().toEpochMilli() //ensure uniqueness
-                : "TX-" + Instant.now().toEpochMilli();
+        //compute shared reference
+        String sharedRef = "TX-" + Instant.now().toEpochMilli();
 
         //execute operations
         from.setBalance(from.getBalance().subtract(amount));

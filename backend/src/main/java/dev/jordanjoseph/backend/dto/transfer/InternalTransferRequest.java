@@ -6,6 +6,5 @@ import java.util.UUID;
 public record InternalTransferRequest(
         UUID fromAccountId,
         UUID toAccountId,
-        @jakarta.validation.constraints.DecimalMin("0.01")BigDecimal amount,
-        String reference
+        @jakarta.validation.constraints.DecimalMin("0.01")BigDecimal amount
 ) {}

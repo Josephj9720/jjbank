@@ -38,14 +38,19 @@ public class ContactController {
             @RequestBody AddContactRequest request) {
 
         UserPrincipal principal = (UserPrincipal) authentication.getPrincipal();
-        contactService.addContact(principal.getId(), request.recipientEmail(), request.displayName());
+        contactService.addContact(
+                principal.getId(),
+                request.recipientEmail(),
+                request.displayName(),
+                request.securityQuestion(),
+                request.securityAnswer());
 
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
     @PutMapping
     public ResponseEntity<Void> updateContact(@RequestBody UpdateContactRequest request) {
-        contactService.updateContact(request.contactId(), request.displayName());
+        contactService.updateContact(request);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 

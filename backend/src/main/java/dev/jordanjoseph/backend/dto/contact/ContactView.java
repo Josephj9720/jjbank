@@ -5,5 +5,5 @@ import java.util.UUID;
 public record ContactView(
         UUID id,
         String displayName,
-        String email
+        @jakarta.validation.constraints.Email String email
 ) {}

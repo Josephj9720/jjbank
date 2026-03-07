@@ -15,9 +15,7 @@ public class Contact {
     @JoinColumn(name = "owner_id", nullable = false)
     private User owner;
 
-    @ManyToOne(optional = false)
-    @JoinColumn(name = "recipient_id", nullable = false)
-    private User recipient;
+    private String recipientEmail;
 
     private String displayName;
     
@@ -38,12 +36,12 @@ public class Contact {
         this.owner = owner;
     }
 
-    public User getRecipient() {
-        return recipient;
+    public String getRecipientEmail() {
+        return recipientEmail;
     }
 
-    public void setRecipient(User recipient) {
-        this.recipient = recipient;
+    public void setRecipientEmail(String recipientEmail) {
+        this.recipientEmail = recipientEmail;
     }
 
     public String getDisplayName() {

@@ -4,5 +4,7 @@ import java.util.UUID;
 
 public record UpdateContactRequest(
         UUID contactId,
-        String displayName
+        String displayName,
+        String securityQuestion,
+        String securityAnswer
 ) {}

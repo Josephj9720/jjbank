@@ -28,6 +28,15 @@ public class ExternalTransfer extends Transaction {
     @Column(nullable = false)
     private Instant expiresAt;
 
+    @Column(nullable = false)
+    private String securityQuestion;
+
+    @Column(nullable = false)
+    private String securityAnswerHash;
+
+    @Column(nullable = false)
+    private int failedSecurityAttempts;
+
     public Status getStatus() {
         return status;
     }
@@ -79,5 +88,29 @@ public class ExternalTransfer extends Transaction {
             throw new IllegalArgumentException("ExternalTransfer can only be of type TRANSFER_IN or TRANSFER_OUT");
         }
         super.setType(type);
+    }
+
+    public String getSecurityQuestion() {
+        return securityQuestion;
+    }
+
+    public void setSecurityQuestion(String securityQuestion) {
+        this.securityQuestion = securityQuestion;
+    }
+
+    public String getSecurityAnswerHash() {
+        return securityAnswerHash;
+    }
+
+    public void setSecurityAnswerHash(String securityAnswerHash) {
+        this.securityAnswerHash = securityAnswerHash;
+    }
+
+    public int getFailedSecurityAttempts() {
+        return failedSecurityAttempts;
+    }
+
+    public void setFailedSecurityAttempts(int failedSecurityAttempts) {
+        this.failedSecurityAttempts = failedSecurityAttempts;
     }
 }

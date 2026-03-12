@@ -3,9 +3,11 @@ package dev.jordanjoseph.backend.controller;
 import dev.jordanjoseph.backend.dto.transfer.InternalTransferRequest;
 import dev.jordanjoseph.backend.dto.transfer.InternalTransferResponse;
 
+import dev.jordanjoseph.backend.dto.transfer.OutgoingExternalTransferRequest;
 import dev.jordanjoseph.backend.service.TransactionService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,5 +24,13 @@ public class TransactionController {
             @RequestHeader(value = "Idempotency-Key", required = false) String idemKey) {
         InternalTransferResponse response = transactionService.internalTransfer(request, idemKey);
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/external/transfer")
+    public ResponseEntity<Void> externalTransfer(
+            @RequestBody @Valid OutgoingExternalTransferRequest request,
+            @RequestHeader(value = "Idempotency-Key", required = false) String idemKey) {
+        transactionService.initiateExternalTransfer(request, idemKey);
+        return ResponseEntity.status(HttpStatus.OK).build();
     }
 }

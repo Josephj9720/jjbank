@@ -2,12 +2,14 @@ package dev.jordanjoseph.backend.service;
 
 import dev.jordanjoseph.backend.dto.email.EmailContent;
 import dev.jordanjoseph.backend.infra.EmailSender;
+import dev.jordanjoseph.backend.model.Account;
 import dev.jordanjoseph.backend.model.ExternalTransfer;
 import dev.jordanjoseph.backend.repository.ExternalTransferRepository;
 import dev.jordanjoseph.backend.repository.TransferTokenRepository;
 import dev.jordanjoseph.backend.util.InstantToDateConverter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.List;
@@ -41,6 +43,7 @@ public class ExternalTransferService {
         this.instantToDateConverter = new InstantToDateConverter();
     }
 
+    @Transactional
     public void expirePendingTransfers() {
         externalTransferRepository.findByStatusAndExpiresAtBefore(ExternalTransfer.Status.PENDING, Instant.now())
                 .forEach(externalTransfer -> {
@@ -62,6 +65,7 @@ public class ExternalTransferService {
                 });
     }
 
+    @Transactional
     public void sendReminders() {
         externalTransferRepository.findByStatusAndReminderAtBeforeAndReminderSentFalse(ExternalTransfer.Status.PENDING, Instant.now())
                 .forEach(externalTransfer -> {
@@ -97,6 +101,11 @@ public class ExternalTransferService {
         ExternalTransfer incoming = getComplementaryTransfer(outgoing.getReference(), outgoing.getAccount().getId());
         String recipient = incoming.getAccount().getUser().getFullName();
         String sender = outgoing.getAccount().getUser().getFullName();
+
+        //return funds to sender
+        Account senderAccount = outgoing.getAccount();
+        senderAccount.setBalance(senderAccount.getBalance().add(outgoing.getAmount()));
+
 
         //generate email templates
         return emailTemplateService.senderTransferExpired(

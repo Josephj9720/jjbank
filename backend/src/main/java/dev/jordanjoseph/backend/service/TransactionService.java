@@ -1,22 +1,29 @@
 package dev.jordanjoseph.backend.service;
 
 import dev.jordanjoseph.backend.dto.account.AccountView;
+import dev.jordanjoseph.backend.dto.email.EmailContent;
 import dev.jordanjoseph.backend.dto.transfer.InternalTransferRequest;
 import dev.jordanjoseph.backend.dto.transfer.InternalTransferResponse;
 
-import dev.jordanjoseph.backend.model.Account;
-import dev.jordanjoseph.backend.model.IdempotencyKey;
-import dev.jordanjoseph.backend.model.Transaction;
-import dev.jordanjoseph.backend.repository.AccountRepository;
-import dev.jordanjoseph.backend.repository.IdempotencyKeyRepository;
-import dev.jordanjoseph.backend.repository.TransactionRepository;
+import dev.jordanjoseph.backend.dto.transfer.OutgoingExternalTransferRequest;
+import dev.jordanjoseph.backend.exception.DuplicateTransactionException;
+import dev.jordanjoseph.backend.infra.EmailSender;
+import dev.jordanjoseph.backend.model.*;
+import dev.jordanjoseph.backend.repository.*;
 import dev.jordanjoseph.backend.util.AccountGuard;
+import dev.jordanjoseph.backend.util.InstantToDateConverter;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.NoSuchElementException;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -32,7 +39,25 @@ public class TransactionService {
     private IdempotencyKeyRepository idempotencyKeyRepository;
 
     @Autowired
+    private ContactRepository contactRepository;
+
+    @Autowired
+    private TransferTokenRepository transferTokenRepository;
+
+    @Autowired
     private AccountGuard accountGuard;
+
+    @Autowired
+    private EmailSender emailSender;
+
+    @Autowired
+    private EmailTemplateService emailTemplateService;
+
+    @Value("${jjb.external-transfer.expiry-days}")
+    private double externalTransferExpiryDays;
+
+    @Value("${jjb.frontend.base.url}")
+    private String frontEndBaseUrl;
 
     @Transactional
     public AccountView deposit(UUID accountId, BigDecimal amount, String idemKey) {
@@ -171,6 +196,109 @@ public class TransactionService {
             idempotencyKeyRepository.save(key);
         }
         return new InternalTransferResponse(from.getId(), to.getId(), amount, sharedRef);
+    }
+
+    @Transactional
+    public void initiateExternalTransfer(OutgoingExternalTransferRequest request, String idemKey) {
+
+        //load sender's account
+        Account senderAccount = this.getAccount(request.senderAccountId());
+        User sender = senderAccount.getUser();
+
+        if(idemKey != null && !idemKey.isBlank()) {
+            if(idempotencyKeyRepository.existsByOwnerIdAndKeyValue(sender.getId(), idemKey)) {
+                throw new DuplicateTransactionException("This transfer has already been initiated. This is a duplicate transaction.");
+            }
+        }
+
+        //ensure sender matches current logged in user
+        accountGuard.requireOwned(sender.getId());
+
+        //ensure amount is correct
+        BigDecimal amount = request.amount();
+        accountGuard.requirePositive(amount);
+        accountGuard.requireSufficientFunds(senderAccount.getBalance(), amount);
+
+        //compute shared reference
+        String sharedRef = "EXT-TX-" + Instant.now().toEpochMilli();
+
+        //take funds from senderAccount
+        senderAccount.setBalance(senderAccount.getBalance().subtract(amount));
+
+        //retrieve contact information of the recipient
+        Contact recipient = contactRepository.findById(request.contactId())
+                .orElseThrow(() -> new NoSuchElementException("No contact was found with the following contact id: " + request.contactId()));
+
+        //persist transactions
+        ExternalTransfer out = new ExternalTransfer();
+        out.setAccount(senderAccount);
+        out.setType(Transaction.Type.TRANSFER_OUT);
+        out.setAmount(amount);
+        out.setReference(sharedRef);
+        out.setStatus(ExternalTransfer.Status.PENDING);
+        out.setMessage(request.message());
+        Instant expiresAt = out.getCreatedAt().plus(10, ChronoUnit.MINUTES); //change value, this is for testing
+        Instant reminderAt = out.getCreatedAt().plus(5, ChronoUnit.MINUTES); //change value, this is for testing
+        out.setExpiresAt(expiresAt); //change this is for testing
+        out.setReminderAt(reminderAt);
+        out.setSecurityQuestion(recipient.getSecurityQuestion());
+        out.setSecurityAnswerHash(recipient.getSecurityAnswerHash());
+        transactionRepository.save(out);
+
+
+        ExternalTransfer in = new ExternalTransfer();
+        //verify if contact is a JJBank user
+        Optional<Account> recipientAccount = accountRepository.findFirstByUserEmailOrderByCreatedAtAsc(recipient.getRecipientEmail());
+        if(recipientAccount.isPresent()) {
+            in.setAccount(recipientAccount.get());
+        } else {
+            //the recipient doesn't yet have an account, set to senderAccount for now,
+            //will have to delete the record for this ExternalTransfer if recipient never creates account
+            //must change it when user accepts the transfer with their new account
+            in.setAccount(senderAccount);
+        }
+        in.setType(Transaction.Type.TRANSFER_IN);
+        in.setAmount(amount);
+        in.setReference(sharedRef);
+        in.setStatus(ExternalTransfer.Status.PENDING);
+        in.setMessage(request.message());
+        in.setExpiresAt(expiresAt);
+        in.setReminderAt(reminderAt);
+        in.setSecurityQuestion(recipient.getSecurityQuestion());
+        in.setSecurityAnswerHash(recipient.getSecurityAnswerHash());
+        transactionRepository.save(in);
+
+        //create and persist transfer token
+        TransferToken transferToken = new TransferToken();
+        transferToken.setIncomingTransfer(in);
+        PasswordEncoder encoder = new BCryptPasswordEncoder(12);
+        String transferTokenString = UUID.randomUUID().toString();
+        transferToken.setToken(encoder.encode(transferTokenString));
+        transferTokenRepository.save(transferToken);
+
+        //record idempotency after success
+        IdempotencyKey key = new IdempotencyKey();
+        key.setOwnerId(sender.getId());
+        key.setKeyValue(idemKey);
+        idempotencyKeyRepository.save(key);
+
+        //create transfer link with transfer token
+        String transferLinkPath = "/transfer/accept/" + transferTokenString;
+        String transferLink = frontEndBaseUrl + transferLinkPath;
+
+        //notify recipient
+        InstantToDateConverter dateConverter = new InstantToDateConverter(); //make it a member variable when you change for @Autowired constructor injection
+        EmailContent emailContent =  emailTemplateService.recipientFundsPending(
+                recipient.getDisplayName(),
+                dateConverter.toAbbreviatedFullDate(Instant.now()),
+                amount.toPlainString(),
+                sender.getFullName(),
+                sharedRef,
+                transferLink
+        );
+        String subject = "JJBank External Transfer: You have received " + amount.toPlainString() + "$J from " + sender.getFullName(); //could be part of email content
+        emailSender.sendFromNoReply(recipient.getRecipientEmail(), subject, emailContent.textContent(), emailContent.htmlContent());
+
     }
 
     private Account getAccount(UUID accountId) {

@@ -82,7 +82,7 @@ public class ExternalTransferService {
                 .setInvalid(true);
 
         //get complementary outgoing transfer and sender/recipient names
-        ExternalTransfer outgoing = getComplementaryTransfer(incoming.getReference(), incoming.getAccount().getId());
+        ExternalTransfer outgoing = getComplementaryTransfer(incoming.getReference(), incoming.getAccount().getId(), incoming.getId());
         String sender = outgoing.getAccount().getUser().getFullName();
         String recipient = incoming.getAccount().getUser().getFullName();
 
@@ -98,7 +98,7 @@ public class ExternalTransferService {
 
     private EmailContent expirePendingOutgoingTransfer(ExternalTransfer outgoing) {
         //get complementary ingoing transfer and sender/recipient names
-        ExternalTransfer incoming = getComplementaryTransfer(outgoing.getReference(), outgoing.getAccount().getId());
+        ExternalTransfer incoming = getComplementaryTransfer(outgoing.getReference(), outgoing.getAccount().getId(), outgoing.getId());
         String recipient = incoming.getAccount().getUser().getFullName();
         String sender = outgoing.getAccount().getUser().getFullName();
 
@@ -117,7 +117,7 @@ public class ExternalTransferService {
         );
     }
 
-    private ExternalTransfer getComplementaryTransfer(String reference, UUID accountId) {
+    private ExternalTransfer getComplementaryTransfer(String reference, UUID accountId, UUID externalTransferId) {
         List<ExternalTransfer> transfers = externalTransferRepository
                 .findByReferenceAndAccountIdNot(reference, accountId);
 
@@ -127,7 +127,14 @@ public class ExternalTransferService {
         }
 
         if(transfers.isEmpty()) {
-            throw new IllegalStateException("No complementary transfer found");
+            //recipient might not have registered with JJBank so the accountId is same as sender's
+            transfers = externalTransferRepository
+                    .findByReferenceAndAccountIdAndIdNot(reference, accountId, externalTransferId);
+
+            if(transfers.isEmpty()) {
+                throw new IllegalStateException("No complementary transfer found");
+
+            }
         }
 
         if(transfers.size() > 1) {

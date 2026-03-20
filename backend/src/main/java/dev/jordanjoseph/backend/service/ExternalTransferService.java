@@ -4,10 +4,12 @@ import dev.jordanjoseph.backend.dto.email.EmailContent;
 import dev.jordanjoseph.backend.infra.EmailSender;
 import dev.jordanjoseph.backend.model.Account;
 import dev.jordanjoseph.backend.model.ExternalTransfer;
+import dev.jordanjoseph.backend.model.TransferToken;
 import dev.jordanjoseph.backend.repository.ExternalTransferRepository;
 import dev.jordanjoseph.backend.repository.TransferTokenRepository;
 import dev.jordanjoseph.backend.util.InstantToDateConverter;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -75,14 +77,27 @@ public class ExternalTransferService {
     }
 
     private EmailContent expirePendingIncomingTransfer(ExternalTransfer incoming) {
-        //invalidate transfer token
-        transferTokenRepository.findByIncomingTransferId(incoming.getId())
-                .orElseThrow(() -> new NoSuchElementException(
-                        "Transfer Token could not be found for external transfer id: " + incoming.getId()))
-                .setInvalid(true);
-
-        //get complementary outgoing transfer and sender/recipient names
+        //get complementary outgoing transfer and sender/recipient account IDs
         ExternalTransfer outgoing = getComplementaryTransfer(incoming.getReference(), incoming.getAccount().getId(), incoming.getId());
+        UUID senderAccountId = outgoing.getAccount().getId();
+        UUID recipientAccountId = incoming.getAccount().getId();
+
+        TransferToken token = transferTokenRepository.findByIncomingTransferId(incoming.getId())
+                .orElseThrow(() ->
+                        new NoSuchElementException("Transfer Token could not be found for external transfer id: " + incoming.getId()));
+
+        if(senderAccountId.equals(recipientAccountId)) {
+            //the recipient has not registered an account with JJBank, delete their record of the transaction
+            //only need the record for the sender who is a JJBank user
+            transferTokenRepository.delete(token);
+            externalTransferRepository.delete(incoming);
+
+        } else {
+            //invalidate transfer token
+            token.setInvalid(true);
+        }
+
+        //get sender/recipient names
         String sender = outgoing.getAccount().getUser().getFullName();
         String recipient = incoming.getAccount().getUser().getFullName();
 

@@ -45,6 +45,7 @@ public class EmailTemplateServiceTest {
 
         //assert DTO values
         assertNotNull(result, "EmailContent should not be null");
+        assertNotNull(result.subject(), "Subject should not be null");
         assertEquals("<html>HTML</html>", result.htmlContent(), "HTML content mismatch");
         assertEquals("TEXT", result.textContent(), "TEXT content mismatch");
 
@@ -99,6 +100,7 @@ public class EmailTemplateServiceTest {
 
         //assert DTO values
         assertNotNull(result, "EmailContent should not be null");
+        assertNotNull(result.subject(), "Subject should not be null");
         assertEquals("<html>HTML</html>", result.htmlContent(), "HTML content mismatch");
         assertEquals("TEXT", result.textContent(), "TEXT content mismatch");
 
@@ -153,6 +155,7 @@ public class EmailTemplateServiceTest {
 
         //assert DTO values
         assertNotNull(result, "EmailContent should not be null");
+        assertNotNull(result.subject(), "Subject should not be null");
         assertEquals("<html>HTML</html>", result.htmlContent(), "HTML content mismatch");
         assertEquals("TEXT", result.textContent(), "TEXT content mismatch");
 
@@ -205,6 +208,7 @@ public class EmailTemplateServiceTest {
 
         //assert DTO values
         assertNotNull(result, "EmailContent should not be null");
+        assertNotNull(result.subject(), "Subject should not be null");
         assertEquals("<html>HTML</html>", result.htmlContent(), "HTML content mismatch");
         assertEquals("TEXT", result.textContent(), "TEXT content mismatch");
 
@@ -257,6 +261,7 @@ public class EmailTemplateServiceTest {
 
         //assert DTO values
         assertNotNull(result, "EmailContent should not be null");
+        assertNotNull(result.subject(), "Subject should not be null");
         assertEquals("<html>HTML</html>", result.htmlContent(), "HTML content mismatch");
         assertEquals("TEXT", result.textContent(), "TEXT content mismatch");
 
@@ -309,6 +314,7 @@ public class EmailTemplateServiceTest {
 
         //assert DTO values
         assertNotNull(result, "EmailContent should not be null");
+        assertNotNull(result.subject(), "Subject should not be null");
         assertEquals("<html>HTML</html>", result.htmlContent(), "HTML content mismatch");
         assertEquals("TEXT", result.textContent(), "TEXT content mismatch");
 
@@ -361,6 +367,7 @@ public class EmailTemplateServiceTest {
 
         //assert DTO values
         assertNotNull(result, "EmailContent should not be null");
+        assertNotNull(result.subject(), "Subject should not be null");
         assertEquals("<html>HTML</html>", result.htmlContent(), "HTML content mismatch");
         assertEquals("TEXT", result.textContent(), "TEXT content mismatch");
 

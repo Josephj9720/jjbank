@@ -1,19 +1,19 @@
 package dev.jordanjoseph.backend.service;
 
 import dev.jordanjoseph.backend.dto.account.AccountView;
-import dev.jordanjoseph.backend.dto.email.EmailContent;
 import dev.jordanjoseph.backend.dto.transfer.InternalTransferRequest;
 import dev.jordanjoseph.backend.dto.transfer.InternalTransferResponse;
 
 import dev.jordanjoseph.backend.dto.transfer.OutgoingExternalTransferRequest;
+import dev.jordanjoseph.backend.dto.transfer.event.TransferInitiatedEvent;
 import dev.jordanjoseph.backend.exception.DuplicateTransactionException;
-import dev.jordanjoseph.backend.infra.EmailSender;
 import dev.jordanjoseph.backend.model.*;
 import dev.jordanjoseph.backend.repository.*;
 import dev.jordanjoseph.backend.util.AccountGuard;
 import dev.jordanjoseph.backend.util.InstantToDateConverter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -48,10 +48,7 @@ public class TransactionService {
     private AccountGuard accountGuard;
 
     @Autowired
-    private EmailSender emailSender;
-
-    @Autowired
-    private EmailTemplateService emailTemplateService;
+    private ApplicationEventPublisher eventPublisher;
 
     @Value("${jjb.external-transfer.expiry-days}")
     private double externalTransferExpiryDays;
@@ -288,17 +285,17 @@ public class TransactionService {
 
         //notify recipient
         InstantToDateConverter dateConverter = new InstantToDateConverter(); //make it a member variable when you change for @Autowired constructor injection
-        EmailContent emailContent =  emailTemplateService.recipientFundsPending(
-                recipient.getDisplayName(),
-                dateConverter.toAbbreviatedFullDate(Instant.now()),
-                amount.toPlainString(),
-                sender.getFullName(),
-                sharedRef,
-                transferLink
+        eventPublisher.publishEvent(
+                new TransferInitiatedEvent(
+                        recipient.getRecipientEmail(),
+                        recipient.getDisplayName(),
+                        dateConverter.toAbbreviatedFullDate(Instant.now()),
+                        amount.toPlainString(),
+                        sender.getFullName(),
+                        sharedRef,
+                        transferLink
+                )
         );
-        String subject = "JJBank External Transfer: You have received " + amount.toPlainString() + "$J from " + sender.getFullName(); //could be part of email content
-        emailSender.sendFromNoReply(recipient.getRecipientEmail(), subject, emailContent.textContent(), emailContent.htmlContent());
-
     }
 
     private Account getAccount(UUID accountId) {

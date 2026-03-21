@@ -268,6 +268,7 @@ public class TransactionService {
         //create and persist transfer token
         TransferToken transferToken = new TransferToken();
         transferToken.setIncomingTransfer(in);
+        transferToken.setRecipient(recipient);
         PasswordEncoder encoder = new BCryptPasswordEncoder(12);
         String transferTokenString = UUID.randomUUID().toString();
         transferToken.setTokenHash(encoder.encode(transferTokenString));

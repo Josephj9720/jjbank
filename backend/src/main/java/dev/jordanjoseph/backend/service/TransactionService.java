@@ -243,16 +243,21 @@ public class TransactionService {
         transactionRepository.save(out);
 
 
+        //variable to hold recipient name, will change depending on if they are a User of JJBank or not
+        String recipientName;
+
         ExternalTransfer in = new ExternalTransfer();
         //verify if contact is a JJBank user
         Optional<Account> recipientAccount = accountRepository.findFirstByUserEmailOrderByCreatedAtAsc(recipient.getRecipientEmail());
         if(recipientAccount.isPresent()) {
             in.setAccount(recipientAccount.get());
+            recipientName = recipientAccount.get().getUser().getFullName();
         } else {
             //the recipient doesn't yet have an account, set to senderAccount for now,
             //will have to delete the record for this ExternalTransfer if recipient never creates account
             //must change it when user accepts the transfer with their new account
             in.setAccount(senderAccount);
+            recipientName = recipient.getDisplayName();
         }
         in.setType(Transaction.Type.TRANSFER_IN);
         in.setAmount(amount);
@@ -289,7 +294,7 @@ public class TransactionService {
         eventPublisher.publishEvent(
                 new TransferInitiatedEvent(
                         recipient.getRecipientEmail(),
-                        recipient.getDisplayName(),
+                        recipientName,
                         dateConverter.toAbbreviatedFullDate(Instant.now()),
                         amount.toPlainString(),
                         sender.getFullName(),

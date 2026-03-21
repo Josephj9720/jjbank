@@ -14,6 +14,9 @@ public class TransferToken {
     @OneToOne(optional = false) @JoinColumn(name = "transaction_id")
     private ExternalTransfer incomingTransfer;
 
+    @ManyToOne(optional = false) @JoinColumn(name = "contact_id")
+    private Contact recipient;
+
     @Column(unique = true, nullable = false, length = 60)
     private String tokenHash;
 
@@ -24,11 +27,19 @@ public class TransferToken {
         return id;
     }
 
+    public Contact getRecipient() {
+        return recipient;
+    }
+
+    public void setRecipient(Contact recipient) {
+        this.recipient = recipient;
+    }
+
     public String getTokenHash() {
         return tokenHash;
     }
 
-    public void setToken(String tokenHash) {
+    public void setTokenHash(String tokenHash) {
         this.tokenHash = tokenHash;
     }
 

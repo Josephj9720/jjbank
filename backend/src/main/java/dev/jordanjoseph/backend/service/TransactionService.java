@@ -270,7 +270,7 @@ public class TransactionService {
         transferToken.setIncomingTransfer(in);
         PasswordEncoder encoder = new BCryptPasswordEncoder(12);
         String transferTokenString = UUID.randomUUID().toString();
-        transferToken.setToken(encoder.encode(transferTokenString));
+        transferToken.setTokenHash(encoder.encode(transferTokenString));
         transferTokenRepository.save(transferToken);
 
         //record idempotency after success

@@ -28,6 +28,9 @@ public class ExternalTransfer extends Transaction {
     @Column(nullable = false)
     private Instant expiresAt;
 
+    @Column
+    private Instant completedAt;
+
     @Column(nullable = false)
     private String securityQuestion;
 
@@ -79,6 +82,14 @@ public class ExternalTransfer extends Transaction {
 
     public void setExpiresAt(Instant expiresAt) {
         this.expiresAt = expiresAt;
+    }
+
+    public Instant getCompletedAt() {
+        return completedAt;
+    }
+
+    public void setCompletedAt(Instant completedAt) {
+        this.completedAt = completedAt;
     }
 
     //to prevent setting ExternalTransfers to enums WITHDRAW AND DEPOSIT

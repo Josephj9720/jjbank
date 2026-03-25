@@ -10,6 +10,7 @@ import dev.jordanjoseph.backend.exception.DuplicateTransactionException;
 import dev.jordanjoseph.backend.model.*;
 import dev.jordanjoseph.backend.repository.*;
 import dev.jordanjoseph.backend.util.AccountGuard;
+import dev.jordanjoseph.backend.util.HashUtil;
 import dev.jordanjoseph.backend.util.InstantToDateConverter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -276,9 +277,9 @@ public class TransactionService {
         TransferToken transferToken = new TransferToken();
         transferToken.setIncomingTransfer(in);
         transferToken.setRecipient(recipient);
-        PasswordEncoder encoder = new BCryptPasswordEncoder(12);
+        HashUtil hashUtil = new HashUtil();
         String transferTokenString = UUID.randomUUID().toString();
-        transferToken.setTokenHash(encoder.encode(transferTokenString));
+        transferToken.setTokenHash(hashUtil.sha256(transferTokenString));
         transferTokenRepository.save(transferToken);
 
         //record idempotency after success
@@ -310,8 +311,8 @@ public class TransactionService {
     public ApiResult claimExternalTransfer(String userEmail, ClaimExternalTransferRequest request, String idemKey) {
 
         //fetch transfer token from database
-        PasswordEncoder encoder = new BCryptPasswordEncoder(12);
-        TransferToken token = transferTokenRepository.findByTokenHash(encoder.encode(request.transferToken()))
+        HashUtil hashUtil = new HashUtil();
+        TransferToken token = transferTokenRepository.findByTokenHash(hashUtil.sha256(request.transferToken()))
                 .orElseThrow(() -> new NoSuchElementException("The provided transfer token could not be found."));
 
         //load recipient's account and user
@@ -343,6 +344,7 @@ public class TransactionService {
         if(incomingTransfer.getFailedSecurityAttempts() < 3) {
             String securityAnswerHash = incomingTransfer.getSecurityAnswerHash();
             String securityAnswerAttempt = request.securityAnswer();
+            PasswordEncoder encoder = new BCryptPasswordEncoder(12);
             if(!encoder.matches(securityAnswerAttempt, securityAnswerHash)) {
                 int updatedFailedSecurityAttempts = incomingTransfer.getFailedSecurityAttempts() + 1;
                 incomingTransfer.setFailedSecurityAttempts(updatedFailedSecurityAttempts);
@@ -350,7 +352,7 @@ public class TransactionService {
                     //invalidate transfer token
                     token.setInvalid(true);
                 }
-                return new ApiResult(ApiResult.Status.FAILURE, 3 - updatedFailedSecurityAttempts + "attempts left");
+                return new ApiResult(ApiResult.Status.FAILURE, 3 - updatedFailedSecurityAttempts + " attempts left");
             }
         } else {
             throw new AccessDeniedException("Maximum failed security attempts reached.");
@@ -362,7 +364,8 @@ public class TransactionService {
         //get complementary external transfer before changing the account
         ExternalTransfer outgoingTransfer = this.getComplementaryTransfer(
                 incomingTransfer.getReference(),
-                incomingTransfer.getAccount().getId());
+                incomingTransfer.getAccount().getId(),
+                incomingTransfer.getId());
 
         //assign chosen account to incoming Transfer record
         incomingTransfer.setAccount(recipientAccount);
@@ -421,24 +424,30 @@ public class TransactionService {
         return new ApiResult(ApiResult.Status.SUCCESS, "Transfer claimed successfully.");
     }
 
-    private ExternalTransfer getComplementaryTransfer(String reference, UUID accountId) {
-        List<Transaction> transfers = transactionRepository
+    private ExternalTransfer getComplementaryTransfer(String reference, UUID accountId, UUID transactionId) {
+        List<Transaction> transactions = transactionRepository
                 .findByReferenceAndAccountIdNot(reference, accountId);
 
-        for(Transaction transfer : transfers) {
-            System.out.println(transfer.getType());
-            System.out.println(transfer.getId());
+        for(Transaction transaction : transactions) {
+            System.out.println(transaction.getType());
+            System.out.println(transaction.getId());
         }
 
-        if(transfers.isEmpty()) {
-            throw new IllegalStateException("No complementary transfer found");
+        if(transactions.isEmpty()) {
+            //the transfer was sent before the recipient had registered with JJBank so the accountId is the same as the sender's
+            transactions = transactionRepository
+                    .findByReferenceAndAccountIdAndIdNot(reference, accountId, transactionId);
+
+            if(transactions.isEmpty()) {
+                throw new IllegalStateException("No complementary transfer found");
+            }
         }
 
-        if(transfers.size() > 1) {
+        if(transactions.size() > 1) {
             throw new IllegalStateException("Expected one complementary transfer but found multiple");
         }
 
-        return (ExternalTransfer) transfers.getFirst();
+        return (ExternalTransfer) transactions.getFirst();
     }
 
     private Account getAccount(UUID accountId) {

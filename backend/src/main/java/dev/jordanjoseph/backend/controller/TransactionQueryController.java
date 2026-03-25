@@ -37,7 +37,7 @@ public class TransactionQueryController {
 
         Transaction.Type t = (type == null || type.isBlank()) ? null : Transaction.Type.valueOf(type);
 
-        Page<TransactionView> page = transactionQueryService.listForAccount(accountId, t, from, to, pageable);
+        Page<TransactionView> page = transactionQueryService.listCompletedTransactionsForAccount(accountId, t, from, to, pageable);
         return assembler.toModel(page);
     }
 

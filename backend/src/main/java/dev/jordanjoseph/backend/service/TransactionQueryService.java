@@ -31,7 +31,7 @@ public class TransactionQueryService {
     @Autowired
     private AccountGuard accountGuard;
 
-    public Page<TransactionView> listForAccount(
+    public Page<TransactionView> listCompletedTransactionsForAccount(
             UUID accountId,
             Transaction.Type type,
             Instant from,
@@ -48,22 +48,15 @@ public class TransactionQueryService {
         if(from == null) from = Instant.EPOCH; //1, Jan, 1970
         if(to == null) to = Instant.now();
 
-        Page<Transaction> page = null;
-        if(type == null) {
-            page = transactionRepository
-                    .findByAccountIdAndCreatedAtBetween(accountId, from, to, pageable);
-
-        } else {
-            page = transactionRepository
-                    .findByAccountIdAndTypeAndCreatedAtBetween(accountId, type, from, to ,pageable);
-        }
+        Page<Transaction> page = transactionRepository
+                .findAndFilterCompletedTransactions(accountId, type, from, to, pageable);
 
         return page.map(this::toView); //method reference, returns Page<TransactionView>
     }
 
     private TransactionView toView(Transaction t) {
         return switch (t) {
-            case ExternalTransfer external -> externalTransferToView(external);
+            case ExternalTransfer external -> completedExternalTransferToView(external);
             case Transaction internal -> internalTransactionToView(internal);
         };
     }
@@ -102,15 +95,19 @@ public class TransactionQueryService {
         };
     }
 
-    private TransactionView externalTransferToView(ExternalTransfer t) {
+    private TransactionView completedExternalTransferToView(ExternalTransfer t) {
+        if(t.getStatus() != ExternalTransfer.Status.COMPLETED) {
+            throw new IllegalStateException("Unexpected 'Status' value for ExternalTransfer: " + t.getStatus());
+        }
         return switch (t.getType()) {
             case TRANSFER_IN -> {
+
                 Transaction sender = getComplementaryTransaction(t.getReference(), t.getAccount().getId());
                 yield new IncomingExternalTransferView(
                         t.getType(),
                         t.getAmount(),
                         t.getReference(),
-                        getDateFromInstant(t.getCreatedAt()),
+                        getDateFromInstant(t.getCompletedAt()),
                         t.getAccount().getType(),
                         t.getAccount().getId(),
                         t.getAccount().getUser().getFullName(),
@@ -125,7 +122,7 @@ public class TransactionQueryService {
                         t.getType(),
                         t.getAmount(),
                         t.getReference(),
-                        getDateFromInstant(t.getCreatedAt()),
+                        getDateFromInstant(t.getCompletedAt()),
                         t.getAccount().getType(),
                         t.getAccount().getId(),
                         t.getAccount().getUser().getFullName(),
@@ -133,7 +130,7 @@ public class TransactionQueryService {
                         recipient.getAccount().getUser().getFullName(),
                         t.getStatus());
             }
-            default -> throw new IllegalStateException("Unexpected value: " + t.getType());
+            default -> throw new IllegalStateException("Unexpected 'Type' value for ExternalTransfer: " + t.getType());
         };
     }
 

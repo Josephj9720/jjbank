@@ -1,10 +1,10 @@
 package dev.jordanjoseph.backend.service;
 
 import dev.jordanjoseph.backend.dto.account.AccountView;
-import dev.jordanjoseph.backend.dto.transfer.InternalTransferRequest;
-import dev.jordanjoseph.backend.dto.transfer.InternalTransferResponse;
+import dev.jordanjoseph.backend.dto.common.ApiResult;
+import dev.jordanjoseph.backend.dto.transfer.*;
 
-import dev.jordanjoseph.backend.dto.transfer.OutgoingExternalTransferRequest;
+import dev.jordanjoseph.backend.dto.transfer.event.TransferCompletedEvent;
 import dev.jordanjoseph.backend.dto.transfer.event.TransferInitiatedEvent;
 import dev.jordanjoseph.backend.exception.DuplicateTransactionException;
 import dev.jordanjoseph.backend.model.*;
@@ -14,6 +14,7 @@ import dev.jordanjoseph.backend.util.InstantToDateConverter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -22,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.UUID;
@@ -302,6 +304,141 @@ public class TransactionService {
                         transferLink
                 )
         );
+    }
+
+    @Transactional
+    public ApiResult claimExternalTransfer(String userEmail, ClaimExternalTransferRequest request, String idemKey) {
+
+        //fetch transfer token from database
+        PasswordEncoder encoder = new BCryptPasswordEncoder(12);
+        TransferToken token = transferTokenRepository.findByTokenHash(encoder.encode(request.transferToken()))
+                .orElseThrow(() -> new NoSuchElementException("The provided transfer token could not be found."));
+
+        //load recipient's account and user
+        ExternalTransfer incomingTransfer = token.getIncomingTransfer();
+        Account recipientAccount = this.getAccount(request.recipientAccountId());
+        User recipient = recipientAccount.getUser();
+
+        if(idemKey != null && !idemKey.isBlank()) {
+            if(idempotencyKeyRepository.existsByOwnerIdAndKeyValue(recipient.getId(), idemKey)) {
+                throw new DuplicateTransactionException("This transfer has already been claimed. This is a duplicate transaction.");
+            }
+        }
+
+        //ensure that the User (recipient) owns the account in which they want to deposit
+        accountGuard.requireOwned(recipient.getId());
+
+        //verify token validity
+        if(token.isInvalid()) {
+            throw new AccessDeniedException("The transfer token is invalid.");
+        }
+
+        //verify that currently logged in userEmail matches recipient email
+        Contact recipientContact = token.getRecipient();
+        if(!userEmail.equals(recipientContact.getRecipientEmail())) {
+            throw new AccessDeniedException("You are not the recipient of the transfer.");
+        }
+
+        //verify security answer
+        if(incomingTransfer.getFailedSecurityAttempts() < 3) {
+            String securityAnswerHash = incomingTransfer.getSecurityAnswerHash();
+            String securityAnswerAttempt = request.securityAnswer();
+            if(!encoder.matches(securityAnswerAttempt, securityAnswerHash)) {
+                int updatedFailedSecurityAttempts = incomingTransfer.getFailedSecurityAttempts() + 1;
+                incomingTransfer.setFailedSecurityAttempts(updatedFailedSecurityAttempts);
+                if(updatedFailedSecurityAttempts == 3) {
+                    //invalidate transfer token
+                    token.setInvalid(true);
+                }
+                return new ApiResult(ApiResult.Status.FAILURE, 3 - updatedFailedSecurityAttempts + "attempts left");
+            }
+        } else {
+            throw new AccessDeniedException("Maximum failed security attempts reached.");
+        }
+
+        //security challenge passed, now claim transfer
+        recipientAccount.setBalance(recipientAccount.getBalance().add(incomingTransfer.getAmount()));
+
+        //get complementary external transfer before changing the account
+        ExternalTransfer outgoingTransfer = this.getComplementaryTransfer(
+                incomingTransfer.getReference(),
+                incomingTransfer.getAccount().getId());
+
+        //assign chosen account to incoming Transfer record
+        incomingTransfer.setAccount(recipientAccount);
+
+        //set both record as COMPLETED
+        Instant now = Instant.now();
+        incomingTransfer.setStatus(ExternalTransfer.Status.COMPLETED);
+        incomingTransfer.setCompletedAt(now);
+        outgoingTransfer.setStatus(ExternalTransfer.Status.COMPLETED);
+        outgoingTransfer.setCompletedAt(now);
+
+        //invalidate transfer token
+        token.setInvalid(true);
+
+        //record idempotency after success
+        IdempotencyKey key = new IdempotencyKey();
+        key.setOwnerId(recipient.getId());
+        key.setKeyValue(idemKey);
+        idempotencyKeyRepository.save(key);
+
+        //load sender's account
+        User sender = outgoingTransfer.getAccount().getUser();
+
+        //load other information required for email
+        String recipientEmail = recipient.getEmail();
+        String recipientFullName = recipient.getFullName();
+        InstantToDateConverter dateConverter = new InstantToDateConverter(); //make it a member variable when you change for @Autowired constructor injection
+        String date = dateConverter.toAbbreviatedFullDate(now);
+        String amount = incomingTransfer.getAmount().toPlainString();
+        String senderEmail = sender.getEmail();
+        String senderFullName = sender.getFullName();
+        String reference = incomingTransfer.getReference();
+
+        //notify recipient
+        eventPublisher.publishEvent(new TransferCompletedEvent(
+                "recipient",
+                recipientEmail,
+                recipientFullName,
+                date,
+                amount,
+                senderFullName,
+                reference)
+        );
+
+        //notify sender
+        eventPublisher.publishEvent(new TransferCompletedEvent(
+                "sender",
+                senderEmail,
+                recipientFullName,
+                date,
+                amount,
+                senderFullName,
+                reference)
+        );
+
+        return new ApiResult(ApiResult.Status.SUCCESS, "Transfer claimed successfully.");
+    }
+
+    private ExternalTransfer getComplementaryTransfer(String reference, UUID accountId) {
+        List<Transaction> transfers = transactionRepository
+                .findByReferenceAndAccountIdNot(reference, accountId);
+
+        for(Transaction transfer : transfers) {
+            System.out.println(transfer.getType());
+            System.out.println(transfer.getId());
+        }
+
+        if(transfers.isEmpty()) {
+            throw new IllegalStateException("No complementary transfer found");
+        }
+
+        if(transfers.size() > 1) {
+            throw new IllegalStateException("Expected one complementary transfer but found multiple");
+        }
+
+        return (ExternalTransfer) transfers.getFirst();
     }
 
     private Account getAccount(UUID accountId) {

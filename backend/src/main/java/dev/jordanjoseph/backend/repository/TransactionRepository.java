@@ -1,5 +1,6 @@
 package dev.jordanjoseph.backend.repository;
 
+import dev.jordanjoseph.backend.model.ExternalTransfer;
 import dev.jordanjoseph.backend.model.Transaction;
 
 import org.springframework.data.domain.Page;
@@ -18,6 +19,8 @@ import java.util.UUID;
 public interface TransactionRepository extends JpaRepository<Transaction, UUID> {
 
     List<Transaction> findByReferenceAndAccountIdNot(String reference, UUID accountId);
+
+    List<Transaction> findByReferenceAndAccountIdAndIdNot(String reference, UUID accountId, UUID id);
 
     Page<Transaction> findByAccountId(UUID accountId, Pageable pageable);
 

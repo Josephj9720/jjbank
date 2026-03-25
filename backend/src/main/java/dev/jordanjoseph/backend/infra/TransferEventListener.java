@@ -1,6 +1,7 @@
 package dev.jordanjoseph.backend.infra;
 
 import dev.jordanjoseph.backend.dto.email.EmailContent;
+import dev.jordanjoseph.backend.dto.transfer.event.TransferCompletedEvent;
 import dev.jordanjoseph.backend.dto.transfer.event.TransferExpiredEvent;
 import dev.jordanjoseph.backend.dto.transfer.event.TransferInitiatedEvent;
 import dev.jordanjoseph.backend.service.EmailTemplateService;
@@ -69,7 +70,41 @@ public class TransferEventListener {
                         emailContent.htmlContent());
             }
             default -> throw new IllegalStateException("Expired Transfer Event - Unexpected value for 'emailTo': " + event.emailTo());
+        }
+    }
 
+    @TransactionalEventListener
+    public void onTransferCompleted(TransferCompletedEvent event) {
+        switch (event.emailTo().toLowerCase()) {
+            case "sender" -> {
+                EmailContent emailContent = emailTemplateService.senderTransferDeposited(
+                        event.senderFullName(),
+                        event.date(),
+                        event.amount(),
+                        event.recipientFullName(),
+                        event.reference());
+
+                emailSender.sendFromNoReply(
+                        event.email(),
+                        emailContent.subject(),
+                        emailContent.textContent(),
+                        emailContent.htmlContent());
+            }
+            case "recipient" -> {
+                EmailContent emailContent = emailTemplateService.recipientFundsDeposited(
+                        event.recipientFullName(),
+                        event.date(),
+                        event.amount(),
+                        event.senderFullName(),
+                        event.reference());
+
+                emailSender.sendFromNoReply(
+                        event.email(),
+                        emailContent.subject(),
+                        emailContent.textContent(),
+                        emailContent.htmlContent());
+            }
+            default -> throw new IllegalStateException("Completed Transfer Event - Unexpected value for 'emailTo': " + event.emailTo());
         }
     }
 

@@ -17,7 +17,7 @@ public class TransferToken {
     @ManyToOne(optional = false) @JoinColumn(name = "contact_id")
     private Contact recipient;
 
-    @Column(unique = true, nullable = false, length = 60)
+    @Column(unique = true, nullable = false, length = 64)
     private String tokenHash;
 
     @Column(nullable = false)

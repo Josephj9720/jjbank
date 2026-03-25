@@ -340,6 +340,12 @@ public class TransactionService {
             throw new AccessDeniedException("You are not the recipient of the transfer.");
         }
 
+        //get complementary external transfer before changing the account
+        ExternalTransfer outgoingTransfer = this.getComplementaryTransfer(
+                incomingTransfer.getReference(),
+                incomingTransfer.getAccount().getId(),
+                incomingTransfer.getId());
+
         //verify security answer
         if(incomingTransfer.getFailedSecurityAttempts() < 3) {
             String securityAnswerHash = incomingTransfer.getSecurityAnswerHash();
@@ -351,6 +357,10 @@ public class TransactionService {
                 if(updatedFailedSecurityAttempts == 3) {
                     //invalidate transfer token
                     token.setInvalid(true);
+
+                    //update expiration Instant
+                    incomingTransfer.setExpiresAt(Instant.now());
+                    outgoingTransfer.setExpiresAt(Instant.now());
                 }
                 return new ApiResult(ApiResult.Status.FAILURE, 3 - updatedFailedSecurityAttempts + " attempts left");
             }
@@ -360,12 +370,6 @@ public class TransactionService {
 
         //security challenge passed, now claim transfer
         recipientAccount.setBalance(recipientAccount.getBalance().add(incomingTransfer.getAmount()));
-
-        //get complementary external transfer before changing the account
-        ExternalTransfer outgoingTransfer = this.getComplementaryTransfer(
-                incomingTransfer.getReference(),
-                incomingTransfer.getAccount().getId(),
-                incomingTransfer.getId());
 
         //assign chosen account to incoming Transfer record
         incomingTransfer.setAccount(recipientAccount);

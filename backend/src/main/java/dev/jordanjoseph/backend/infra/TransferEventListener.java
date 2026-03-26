@@ -1,10 +1,7 @@
 package dev.jordanjoseph.backend.infra;
 
 import dev.jordanjoseph.backend.dto.email.EmailContent;
-import dev.jordanjoseph.backend.dto.transfer.event.TransferCompletedEvent;
-import dev.jordanjoseph.backend.dto.transfer.event.TransferDeclinedEvent;
-import dev.jordanjoseph.backend.dto.transfer.event.TransferExpiredEvent;
-import dev.jordanjoseph.backend.dto.transfer.event.TransferInitiatedEvent;
+import dev.jordanjoseph.backend.dto.transfer.event.*;
 import dev.jordanjoseph.backend.service.EmailTemplateService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -120,6 +117,22 @@ public class TransferEventListener {
 
         emailSender.sendFromNoReply(
                 event.senderEmail(),
+                emailContent.subject(),
+                emailContent.textContent(),
+                emailContent.htmlContent());
+    }
+
+    @TransactionalEventListener
+    public void onTransferCancelled(TransferCancelledEvent event) {
+        EmailContent emailContent = emailTemplateService.recipientTransferCancelled(
+                event.recipientDisplayName(),
+                event.date(),
+                event.amount(),
+                event.senderFullName(),
+                event.reference());
+
+        emailSender.sendFromNoReply(
+                event.recipientEmail(),
                 emailContent.subject(),
                 emailContent.textContent(),
                 emailContent.htmlContent());

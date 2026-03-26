@@ -5,6 +5,7 @@ import dev.jordanjoseph.backend.dto.common.ApiResult;
 import dev.jordanjoseph.backend.dto.transfer.*;
 
 import dev.jordanjoseph.backend.dto.transfer.event.TransferCompletedEvent;
+import dev.jordanjoseph.backend.dto.transfer.event.TransferDeclinedEvent;
 import dev.jordanjoseph.backend.dto.transfer.event.TransferInitiatedEvent;
 import dev.jordanjoseph.backend.exception.DuplicateTransactionException;
 import dev.jordanjoseph.backend.model.*;
@@ -367,7 +368,7 @@ public class TransactionService {
         } else {
             throw new AccessDeniedException("Maximum failed security attempts reached.");
         }
-        
+
         ClaimOrDeclineExternalTransferRequest.Action userAction = ClaimOrDeclineExternalTransferRequest.Action
                 .valueOf(request.action().toUpperCase());
         if(userAction.equals(ClaimOrDeclineExternalTransferRequest.Action.CLAIM)) {
@@ -465,7 +466,49 @@ public class TransactionService {
             TransferToken token,
             String idemKey
     ) {
+        //security challenge passed, now decline transfer
+        //refund sender
+        Account senderAccount = outgoingTransfer.getAccount();
+        senderAccount.setBalance(senderAccount.getBalance().add(outgoingTransfer.getAmount()));
 
+        //assign chosen account to incoming Transfer record to link it to recipient
+        incomingTransfer.setAccount(recipientAccount);
+
+        //set both records as DECLINED
+        Instant now = Instant.now();
+        incomingTransfer.setStatus(ExternalTransfer.Status.DECLINED);
+        outgoingTransfer.setStatus(ExternalTransfer.Status.DECLINED);
+
+        //invalidate transfer token
+        token.setInvalid(true);
+
+        //record idempotency after success
+        IdempotencyKey key = new IdempotencyKey();
+        key.setOwnerId(recipient.getId());
+        key.setKeyValue(idemKey);
+        idempotencyKeyRepository.save(key);
+
+        //load sender's account
+        User sender = outgoingTransfer.getAccount().getUser();
+
+        //load other information required for email
+        String recipientFullName = recipient.getFullName();
+        InstantToDateConverter dateConverter = new InstantToDateConverter(); //make it a member variable when you change for @Autowired constructor injection
+        String date = dateConverter.toAbbreviatedFullDate(now);
+        String amount = incomingTransfer.getAmount().toPlainString();
+        String senderEmail = sender.getEmail();
+        String senderFullName = sender.getFullName();
+        String reference = incomingTransfer.getReference();
+
+        //notify sender
+        eventPublisher.publishEvent(new TransferDeclinedEvent(
+                senderEmail,
+                senderFullName,
+                date,
+                amount,
+                recipientFullName,
+                reference)
+        );
     }
 
     private ExternalTransfer getComplementaryTransfer(String reference, UUID accountId, UUID transactionId) {

@@ -374,7 +374,7 @@ public class TransactionService {
             throw new AccessDeniedException("Maximum failed security attempts reached.");
         }
 
-        switch (decision) {
+        return switch (decision) {
             case CLAIM -> this.claimExternalTransfer(
                     recipient,
                     recipientAccount,
@@ -389,12 +389,10 @@ public class TransactionService {
                     outgoingTransfer,
                     token,
                     idemKey);
-        }
-
-        return new ApiResult(ApiResult.Status.SUCCESS, "Transfer claimed successfully.");
+        };
     }
 
-    private void claimExternalTransfer(
+    private ApiResult claimExternalTransfer(
             User recipient,
             Account recipientAccount,
             ExternalTransfer incomingTransfer,
@@ -457,9 +455,10 @@ public class TransactionService {
                 senderFullName,
                 reference)
         );
+        return new ApiResult(ApiResult.Status.SUCCESS, "Transfer claimed successfully.");
     }
 
-    private void declineExternalTransfer(
+    private ApiResult declineExternalTransfer(
             User recipient,
             Account recipientAccount,
             ExternalTransfer incomingTransfer,
@@ -510,6 +509,7 @@ public class TransactionService {
                 recipientFullName,
                 reference)
         );
+        return new ApiResult(ApiResult.Status.SUCCESS, "Transfer declined successfully.");
     }
 
     @Transactional

@@ -367,7 +367,38 @@ public class TransactionService {
         } else {
             throw new AccessDeniedException("Maximum failed security attempts reached.");
         }
+        
+        ClaimOrDeclineExternalTransferRequest.Action userAction = ClaimOrDeclineExternalTransferRequest.Action
+                .valueOf(request.action().toUpperCase());
+        if(userAction.equals(ClaimOrDeclineExternalTransferRequest.Action.CLAIM)) {
+            this.claimExternalTransfer(
+                    recipient,
+                    recipientAccount,
+                    incomingTransfer,
+                    outgoingTransfer,
+                    token,
+                    idemKey);
 
+        } else if(userAction.equals(ClaimOrDeclineExternalTransferRequest.Action.DECLINE)) {
+            this.declineExternalTransfer(
+                    recipient,
+                    recipientAccount,
+                    incomingTransfer,
+                    outgoingTransfer,
+                    token,
+                    idemKey);
+        }
+
+        return new ApiResult(ApiResult.Status.SUCCESS, "Transfer claimed successfully.");
+    }
+
+    private void claimExternalTransfer(
+            User recipient,
+            Account recipientAccount,
+            ExternalTransfer incomingTransfer,
+            ExternalTransfer outgoingTransfer,
+            TransferToken token,
+            String idemKey) {
         //security challenge passed, now claim transfer
         recipientAccount.setBalance(recipientAccount.getBalance().add(incomingTransfer.getAmount()));
 
@@ -424,8 +455,17 @@ public class TransactionService {
                 senderFullName,
                 reference)
         );
+    }
 
-        return new ApiResult(ApiResult.Status.SUCCESS, "Transfer claimed successfully.");
+    private void declineExternalTransfer(
+            User recipient,
+            Account recipientAccount,
+            ExternalTransfer incomingTransfer,
+            ExternalTransfer outgoingTransfer,
+            TransferToken token,
+            String idemKey
+    ) {
+
     }
 
     private ExternalTransfer getComplementaryTransfer(String reference, UUID accountId, UUID transactionId) {

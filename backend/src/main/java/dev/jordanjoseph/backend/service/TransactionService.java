@@ -310,7 +310,11 @@ public class TransactionService {
     }
 
     @Transactional
-    public ApiResult claimOrDeclineExternalTransfer(String userEmail, ClaimOrDeclineExternalTransferRequest request, String idemKey) {
+    public ApiResult claimOrDeclineExternalTransfer(
+            String userEmail,
+            ClaimOrDeclineExternalTransferRequest request,
+            ClaimOrDeclineExternalTransferRequest.Decision decision,
+            String idemKey) {
 
         //fetch transfer token from database
         HashUtil hashUtil = new HashUtil();
@@ -370,19 +374,15 @@ public class TransactionService {
             throw new AccessDeniedException("Maximum failed security attempts reached.");
         }
 
-        ClaimOrDeclineExternalTransferRequest.Action userAction = ClaimOrDeclineExternalTransferRequest.Action
-                .valueOf(request.action().toUpperCase());
-        if(userAction.equals(ClaimOrDeclineExternalTransferRequest.Action.CLAIM)) {
-            this.claimExternalTransfer(
+        switch (decision) {
+            case CLAIM -> this.claimExternalTransfer(
                     recipient,
                     recipientAccount,
                     incomingTransfer,
                     outgoingTransfer,
                     token,
                     idemKey);
-
-        } else if(userAction.equals(ClaimOrDeclineExternalTransferRequest.Action.DECLINE)) {
-            this.declineExternalTransfer(
+            case DECLINE -> this.declineExternalTransfer(
                     recipient,
                     recipientAccount,
                     incomingTransfer,

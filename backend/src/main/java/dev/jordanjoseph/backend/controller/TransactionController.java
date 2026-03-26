@@ -1,11 +1,8 @@
 package dev.jordanjoseph.backend.controller;
 
 import dev.jordanjoseph.backend.dto.common.ApiResult;
-import dev.jordanjoseph.backend.dto.transfer.ClaimOrDeclineExternalTransferRequest;
-import dev.jordanjoseph.backend.dto.transfer.InternalTransferRequest;
-import dev.jordanjoseph.backend.dto.transfer.InternalTransferResponse;
+import dev.jordanjoseph.backend.dto.transfer.*;
 
-import dev.jordanjoseph.backend.dto.transfer.OutgoingExternalTransferRequest;
 import dev.jordanjoseph.backend.model.UserPrincipal;
 import dev.jordanjoseph.backend.service.TransactionService;
 import jakarta.validation.Valid;
@@ -80,6 +77,14 @@ public class TransactionController {
                     .status(HttpStatus.BAD_REQUEST)
                     .body(result.message());
         }
+    }
+
+    @PostMapping("/external/transfer/cancel")
+    public ResponseEntity<Void> cancelExternalTransfer(
+            @RequestBody CancelExternalTransferRequest request,
+            @RequestHeader(value = "Idempotency-Key", required = false) String idemKey) {
+        transactionService.cancelExternalTransfer(request, idemKey);
+        return ResponseEntity.status(HttpStatus.OK).build();
     }
 
 }

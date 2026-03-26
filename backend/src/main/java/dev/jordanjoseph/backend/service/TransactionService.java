@@ -323,7 +323,7 @@ public class TransactionService {
 
         if(idemKey != null && !idemKey.isBlank()) {
             if(idempotencyKeyRepository.existsByOwnerIdAndKeyValue(recipient.getId(), idemKey)) {
-                throw new DuplicateTransactionException("This transfer has already been claimed. This is a duplicate transaction.");
+                throw new DuplicateTransactionException("This transfer has already been processed. This is a duplicate transaction.");
             }
         }
 

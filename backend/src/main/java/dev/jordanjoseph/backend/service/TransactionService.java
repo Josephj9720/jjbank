@@ -4,6 +4,7 @@ import dev.jordanjoseph.backend.dto.account.AccountView;
 import dev.jordanjoseph.backend.dto.common.ApiResult;
 import dev.jordanjoseph.backend.dto.transfer.*;
 
+import dev.jordanjoseph.backend.dto.transfer.event.TransferCancelledEvent;
 import dev.jordanjoseph.backend.dto.transfer.event.TransferCompletedEvent;
 import dev.jordanjoseph.backend.dto.transfer.event.TransferDeclinedEvent;
 import dev.jordanjoseph.backend.dto.transfer.event.TransferInitiatedEvent;
@@ -507,6 +508,98 @@ public class TransactionService {
                 date,
                 amount,
                 recipientFullName,
+                reference)
+        );
+    }
+
+    @Transactional
+    public void cancelExternalTransfer(CancelExternalTransferRequest request, String idemKey) {
+
+        //load outgoing ExternalTransfer and sender's account and User
+        ExternalTransfer outgoingTransfer = (ExternalTransfer) transactionRepository.findById(request.outgoingTransferId())
+                .orElseThrow(() -> new NoSuchElementException(
+                        "No external transfer was found with the following id: " + request.outgoingTransferId())
+                );
+        Account senderAccount = outgoingTransfer.getAccount();
+        User sender = senderAccount.getUser();
+
+        if(idemKey != null && !idemKey.isBlank()) {
+            if(idempotencyKeyRepository.existsByOwnerIdAndKeyValue(sender.getId(), idemKey)) {
+                throw new DuplicateTransactionException("This transfer has already been cancelled. This is a duplicate transaction.");
+            }
+        }
+
+        //ensure sender matches currently logged in user
+        accountGuard.requireOwned(sender.getId());
+
+        //refund sender
+        senderAccount.setBalance(senderAccount.getBalance().add(outgoingTransfer.getAmount()));
+
+        //load incoming transfer
+        ExternalTransfer incomingTransfer = this.getComplementaryTransfer(
+                outgoingTransfer.getReference(),
+                outgoingTransfer.getAccount().getId(),
+                outgoingTransfer.getId());
+
+        //cancel the external transfers
+        outgoingTransfer.setStatus(ExternalTransfer.Status.CANCELLED);
+        incomingTransfer.setStatus(ExternalTransfer.Status.CANCELLED);
+
+        //get sender and recipient account IDs
+        UUID senderAccountId = senderAccount.getId();
+        UUID recipientAccountId = incomingTransfer.getAccount().getId();
+
+        //set up variable to hold recipient name and email
+        String recipientName;
+        String recipientEmail;
+
+        //get TransferToken
+        TransferToken token = transferTokenRepository.findByIncomingTransferId(incomingTransfer.getId())
+                .orElseThrow(() ->
+                        new NoSuchElementException("Transfer Token could not be found for external transfer id: " + incomingTransfer.getId()));
+
+        if(senderAccountId.equals(recipientAccountId)) {
+            //the transfer was sent before the recipient had registered, delete their record of the transaction
+            //only need the record for the user who is a JJBank user
+            transferTokenRepository.delete(token);
+            transactionRepository.delete(incomingTransfer);
+
+            //set recipient name and email
+            recipientName = token.getRecipient().getDisplayName();
+            recipientEmail = token.getRecipient().getRecipientEmail();
+
+        } else {
+            //the recipient is a JJBank User, keep the record, invalidate token
+            token.setInvalid(true);
+
+            //get recipient User
+            User recipient = incomingTransfer.getAccount().getUser();
+
+            //set recipient name and email
+            recipientName = recipient.getFullName();
+            recipientEmail = recipient.getEmail();
+        }
+
+        //record idempotency after success
+        IdempotencyKey key = new IdempotencyKey();
+        key.setOwnerId(sender.getId());
+        key.setKeyValue(idemKey);
+        idempotencyKeyRepository.save(key);
+
+        //retrieve necessary information to email recipient
+        InstantToDateConverter dateConverter = new InstantToDateConverter();
+        String date = dateConverter.toAbbreviatedFullDate(Instant.now());
+        String amount = outgoingTransfer.getAmount().toPlainString();
+        String senderFullName = sender.getFullName();
+        String reference = outgoingTransfer.getReference();
+
+        //notify recipient
+        eventPublisher.publishEvent(new TransferCancelledEvent(
+                recipientEmail,
+                recipientName,
+                date,
+                amount,
+                senderFullName,
                 reference)
         );
     }

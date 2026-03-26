@@ -2,6 +2,7 @@ package dev.jordanjoseph.backend.infra;
 
 import dev.jordanjoseph.backend.dto.email.EmailContent;
 import dev.jordanjoseph.backend.dto.transfer.event.TransferCompletedEvent;
+import dev.jordanjoseph.backend.dto.transfer.event.TransferDeclinedEvent;
 import dev.jordanjoseph.backend.dto.transfer.event.TransferExpiredEvent;
 import dev.jordanjoseph.backend.dto.transfer.event.TransferInitiatedEvent;
 import dev.jordanjoseph.backend.service.EmailTemplateService;
@@ -106,6 +107,22 @@ public class TransferEventListener {
             }
             default -> throw new IllegalStateException("Completed Transfer Event - Unexpected value for 'emailTo': " + event.emailTo());
         }
+    }
+
+    @TransactionalEventListener
+    public void onTransferDeclined(TransferDeclinedEvent event) {
+        EmailContent emailContent = emailTemplateService.senderTransferDeclined(
+                event.senderFullName(),
+                event.date(),
+                event.amount(),
+                event.recipientFullName(),
+                event.reference());
+
+        emailSender.sendFromNoReply(
+                event.senderEmail(),
+                emailContent.subject(),
+                emailContent.textContent(),
+                emailContent.htmlContent());
     }
 
 }

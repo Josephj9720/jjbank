@@ -48,6 +48,7 @@ public class TransactionController {
         ApiResult result = transactionService.claimOrDeclineExternalTransfer(
                 principal.getUsername(),
                 request,
+                ClaimOrDeclineExternalTransferRequest.Decision.CLAIM,
                 idemKey);
 
         if(result.status().equals(ApiResult.Status.SUCCESS)) {
@@ -58,4 +59,27 @@ public class TransactionController {
                     .body(result.message());
         }
     }
+
+    @PostMapping("/external/transfer/decline")
+    public ResponseEntity<String> declineExternalTransfer(
+            Authentication authentication,
+            @RequestBody ClaimOrDeclineExternalTransferRequest request,
+            @RequestHeader(value = "Idempotency-Key", required = false) String idemKey) {
+
+        UserPrincipal principal = (UserPrincipal) authentication.getPrincipal();
+        ApiResult result = transactionService.claimOrDeclineExternalTransfer(
+                principal.getUsername(),
+                request,
+                ClaimOrDeclineExternalTransferRequest.Decision.DECLINE,
+                idemKey);
+
+        if(result.status().equals(ApiResult.Status.SUCCESS)) {
+            return ResponseEntity.ok(result.message());
+        } else {
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body(result.message());
+        }
+    }
+
 }

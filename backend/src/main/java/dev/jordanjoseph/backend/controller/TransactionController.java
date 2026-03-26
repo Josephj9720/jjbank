@@ -1,7 +1,7 @@
 package dev.jordanjoseph.backend.controller;
 
 import dev.jordanjoseph.backend.dto.common.ApiResult;
-import dev.jordanjoseph.backend.dto.transfer.ClaimExternalTransferRequest;
+import dev.jordanjoseph.backend.dto.transfer.ClaimOrDeclineExternalTransferRequest;
 import dev.jordanjoseph.backend.dto.transfer.InternalTransferRequest;
 import dev.jordanjoseph.backend.dto.transfer.InternalTransferResponse;
 
@@ -41,11 +41,11 @@ public class TransactionController {
     @PostMapping("/external/transfer/claim")
     public ResponseEntity<String> claimExternalTransfer(
             Authentication authentication,
-            @RequestBody ClaimExternalTransferRequest request,
+            @RequestBody ClaimOrDeclineExternalTransferRequest request,
             @RequestHeader(value = "Idempotency-Key", required = false) String idemKey) {
 
         UserPrincipal principal = (UserPrincipal) authentication.getPrincipal();
-        ApiResult result = transactionService.claimExternalTransfer(
+        ApiResult result = transactionService.claimOrDeclineExternalTransfer(
                 principal.getUsername(),
                 request,
                 idemKey);

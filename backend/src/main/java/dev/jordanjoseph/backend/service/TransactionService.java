@@ -308,7 +308,7 @@ public class TransactionService {
     }
 
     @Transactional
-    public ApiResult claimExternalTransfer(String userEmail, ClaimExternalTransferRequest request, String idemKey) {
+    public ApiResult claimOrDeclineExternalTransfer(String userEmail, ClaimOrDeclineExternalTransferRequest request, String idemKey) {
 
         //fetch transfer token from database
         HashUtil hashUtil = new HashUtil();

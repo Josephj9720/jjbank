@@ -27,6 +27,7 @@ public class TransferEventListener {
                 event.amount(),
                 event.senderFullName(),
                 event.sharedRef(),
+                event.message(),
                 event.transferLink());
 
         emailSender.sendFromNoReply(
@@ -80,7 +81,8 @@ public class TransferEventListener {
                         event.date(),
                         event.amount(),
                         event.recipientFullName(),
-                        event.reference());
+                        event.reference(),
+                        event.message());
 
                 emailSender.sendFromNoReply(
                         event.email(),
@@ -94,7 +96,8 @@ public class TransferEventListener {
                         event.date(),
                         event.amount(),
                         event.senderFullName(),
-                        event.reference());
+                        event.reference(),
+                        event.message());
 
                 emailSender.sendFromNoReply(
                         event.email(),

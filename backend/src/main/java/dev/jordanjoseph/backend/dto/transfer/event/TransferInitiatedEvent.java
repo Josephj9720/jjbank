@@ -7,5 +7,6 @@ public record TransferInitiatedEvent(
         String amount,
         String senderFullName,
         String sharedRef,
+        String message,
         String transferLink
 ) {}

@@ -7,5 +7,6 @@ public record TransferCompletedEvent(
     String date,
     String amount,
     String senderFullName,
-    String reference
+    String reference,
+    String message
 ) {}

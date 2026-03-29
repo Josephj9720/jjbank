@@ -1,0 +1,15 @@
+Hello [[${recipient}]],
+
+Remember to deposit your funds from [[${sender}]] before [[${expiry}}]].
+      [# th:if="${message}"]
+      Message: [[${message}]][/]
+      Date: [[${date}]]
+      Amount: $[[${amount}]] (J)
+      From: [[${sender}]]
+      Reference: [[${reference}]]
+	
+	View Transaction: [[${link}]]
+
+If you didn't make this transaction, please contact support immediately.
+
+© 2026 JJBank

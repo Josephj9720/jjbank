@@ -71,17 +71,17 @@
                         </tr>
                         <tr>
                             <td style="background-color:#edf3fc; padding:16px; border-radius:8px;">
-                                <table style="width:100%;">
+                                <table th:if="${message}" style="width:100%;">
                                     <!-- message label -->
-                                    <tr th:if="${message}">
+                                    <tr >
                                         <td class="secondary-text" style="width: 50%; font-size:14px; color:#0B1215;">Message:</td>
                                     </tr>
                                     <!-- message value -->
-                                    <tr th:if="${message}">
+                                    <tr>
                                         <td class="secondary-text" style="width: 50%; font-size:14px; color:#0B1215; font-weight:bold;" th:text="${message}">This is my message to you.</td>
                                     </tr>
                                     <!-- spacing -->
-                                    <tr th:if="${message}">
+                                    <tr>
                                         <!-- use &nbsp non-breaking space for empty cell to show -->
                                         <td style="font-size:14px; color:#0B1215;">&nbsp;</td>
                                     </tr>

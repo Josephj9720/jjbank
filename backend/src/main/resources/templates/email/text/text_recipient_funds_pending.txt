@@ -1,7 +1,8 @@
 Hello [[${recipient}]],
 
 [[${sender}]] has sent you funds. Please view the transaction to deposit your funds.
-
+      [# th:if="${message}"]
+      Message: [[${message}]][/]
       Date: [[${date}]]
       Amount: $[[${amount}]] (J)
       From: [[${sender}]]

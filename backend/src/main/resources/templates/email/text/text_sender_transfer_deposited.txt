@@ -1,7 +1,8 @@
 Hello [[${sender}]],
 
 Your transfer was successfully accepted and deposited.
-
+      [# th:if="${message}"]
+      Message: [[${message}]][/]
       Date: [[${date}]]
       Amount: $[[${amount}]] (J)
       To: [[${recipient}]]

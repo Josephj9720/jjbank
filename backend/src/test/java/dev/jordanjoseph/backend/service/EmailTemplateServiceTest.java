@@ -39,9 +39,10 @@ public class EmailTemplateServiceTest {
         String amount = "$50 (J)";
         String sender = "Yellow Knife";
         String reference = "TX-123456";
+        String message = "This is a test for transfers.";
 
         //act - call method
-        EmailContent result = service.recipientFundsDeposited(recipient, date, amount, sender, reference);
+        EmailContent result = service.recipientFundsDeposited(recipient, date, amount, sender, reference, message);
 
         //assert DTO values
         assertNotNull(result, "EmailContent should not be null");
@@ -59,6 +60,7 @@ public class EmailTemplateServiceTest {
         assertEquals(amount, htmlContext.getVariable("amount"));
         assertEquals(sender, htmlContext.getVariable("sender"));
         assertEquals(reference, htmlContext.getVariable("reference"));
+        assertEquals(message, htmlContext.getVariable("message"));
 
         //capture text Context arguments to inspect variables
         ArgumentCaptor<Context> textContextCaptor = ArgumentCaptor.forClass(Context.class);
@@ -70,6 +72,7 @@ public class EmailTemplateServiceTest {
         assertEquals(amount, textContext.getVariable("amount"));
         assertEquals(sender, textContext.getVariable("sender"));
         assertEquals(reference, textContext.getVariable("reference"));
+        assertEquals(message, textContext.getVariable("message"));
 
         //verify that both templates were called exactly once
         verify(templateEngine, times(1)).process(eq("recipient_funds_deposited"), any(Context.class));
@@ -93,10 +96,11 @@ public class EmailTemplateServiceTest {
         String amount = "$50 (J)";
         String sender = "Yellow Knife";
         String reference = "TX-123456";
+        String message = "This is a test for transfers.";
         String link = "www.jordanjoseph.dev";
 
         //act - call method
-        EmailContent result = service.recipientFundsPending(recipient, date, amount, sender, reference, link);
+        EmailContent result = service.recipientFundsPending(recipient, date, amount, sender, reference, message, link);
 
         //assert DTO values
         assertNotNull(result, "EmailContent should not be null");
@@ -114,6 +118,7 @@ public class EmailTemplateServiceTest {
         assertEquals(amount, htmlContext.getVariable("amount"));
         assertEquals(sender, htmlContext.getVariable("sender"));
         assertEquals(reference, htmlContext.getVariable("reference"));
+        assertEquals(message, htmlContext.getVariable("message"));
         assertEquals(link, htmlContext.getVariable("link"));
 
         //capture text Context arguments to inspect variables
@@ -126,6 +131,7 @@ public class EmailTemplateServiceTest {
         assertEquals(amount, textContext.getVariable("amount"));
         assertEquals(sender, textContext.getVariable("sender"));
         assertEquals(reference, textContext.getVariable("reference"));
+        assertEquals(message, textContext.getVariable("message"));
         assertEquals(link, textContext.getVariable("link"));
 
         //verify that both templates were called exactly once
@@ -255,9 +261,10 @@ public class EmailTemplateServiceTest {
         String amount = "$50 (J)";
         String recipient = "Ryu";
         String reference = "TX-123456";
+        String message = "This is a test for transfers.";
 
         //act - call method
-        EmailContent result = service.senderTransferDeposited(sender, date, amount, recipient, reference);
+        EmailContent result = service.senderTransferDeposited(sender, date, amount, recipient, reference, message);
 
         //assert DTO values
         assertNotNull(result, "EmailContent should not be null");
@@ -275,6 +282,7 @@ public class EmailTemplateServiceTest {
         assertEquals(amount, htmlContext.getVariable("amount"));
         assertEquals(recipient, htmlContext.getVariable("recipient"));
         assertEquals(reference, htmlContext.getVariable("reference"));
+        assertEquals(message, htmlContext.getVariable("message"));
 
         //capture text Context arguments to inspect variables
         ArgumentCaptor<Context> textContextCaptor = ArgumentCaptor.forClass(Context.class);
@@ -286,6 +294,7 @@ public class EmailTemplateServiceTest {
         assertEquals(amount, textContext.getVariable("amount"));
         assertEquals(recipient, textContext.getVariable("recipient"));
         assertEquals(reference, textContext.getVariable("reference"));
+        assertEquals(message, textContext.getVariable("message"));
 
         //verify that both templates were called exactly once
         verify(templateEngine, times(1)).process(eq("sender_transfer_deposited"), any(Context.class));

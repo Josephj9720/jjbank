@@ -21,7 +21,8 @@ public class EmailTemplateService {
             String date,
             String amount,
             String sender,
-            String reference) {
+            String reference,
+            String message) {
 
         Context context = new Context();
         context.setVariable("recipient", recipient);
@@ -29,6 +30,7 @@ public class EmailTemplateService {
         context.setVariable("amount", amount);
         context.setVariable("sender", sender);
         context.setVariable("reference", reference);
+        context.setVariable("message", message);
 
         String htmlContent = templateEngine.process("recipient_funds_deposited", context); //resolver1
         String textContent = templateEngine.process("text_recipient_funds_deposited", context); //resolver2
@@ -44,6 +46,7 @@ public class EmailTemplateService {
             String amount,
             String sender,
             String reference,
+            String message,
             String link) {
 
         Context context = new Context();
@@ -52,6 +55,7 @@ public class EmailTemplateService {
         context.setVariable("amount", amount);
         context.setVariable("sender", sender);
         context.setVariable("reference", reference);
+        context.setVariable("message", message);
         context.setVariable("link", link);
 
         String htmlContent = templateEngine.process("recipient_funds_pending", context);
@@ -111,7 +115,8 @@ public class EmailTemplateService {
             String date,
             String amount,
             String recipient,
-            String reference) {
+            String reference,
+            String message) {
 
         Context context = new Context();
         context.setVariable("sender", sender);
@@ -119,6 +124,8 @@ public class EmailTemplateService {
         context.setVariable("amount", amount);
         context.setVariable("recipient", recipient);
         context.setVariable("reference", reference);
+        context.setVariable("message", message);
+
 
         String htmlContent = templateEngine.process("sender_transfer_deposited", context);
         String textContent = templateEngine.process("text_sender_transfer_deposited", context);

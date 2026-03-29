@@ -304,6 +304,7 @@ public class TransactionService {
                         amount.toPlainString(),
                         sender.getFullName(),
                         sharedRef,
+                        request.message(),
                         transferLink
                 )
         );
@@ -433,6 +434,7 @@ public class TransactionService {
         String senderEmail = sender.getEmail();
         String senderFullName = sender.getFullName();
         String reference = incomingTransfer.getReference();
+        String message = incomingTransfer.getMessage();
 
         //notify recipient
         eventPublisher.publishEvent(new TransferCompletedEvent(
@@ -442,7 +444,8 @@ public class TransactionService {
                 date,
                 amount,
                 senderFullName,
-                reference)
+                reference,
+                message)
         );
 
         //notify sender
@@ -453,7 +456,8 @@ public class TransactionService {
                 date,
                 amount,
                 senderFullName,
-                reference)
+                reference,
+                message)
         );
         return new ApiResult(ApiResult.Status.SUCCESS, "Transfer claimed successfully.");
     }

@@ -160,4 +160,22 @@ public class TransferEventListener {
                 emailContent.htmlContent());
     }
 
+    @TransactionalEventListener
+    public void onTransferRequested(TransferRequestedEvent event) {
+        EmailContent emailContent = emailTemplateService.senderTransferRequested(
+                event.senderFullName(),
+                event.date(),
+                event.amount(),
+                event.recipientFullName(),
+                event.reference(),
+                event.message(),
+                event.transferLink());
+
+        emailSender.sendFromNoReply(
+                event.senderEmail(),
+                emailContent.subject(),
+                emailContent.textContent(),
+                emailContent.htmlContent());
+    }
+
 }

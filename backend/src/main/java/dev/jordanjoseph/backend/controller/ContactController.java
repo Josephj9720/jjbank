@@ -40,7 +40,7 @@ public class ContactController {
         UserPrincipal principal = (UserPrincipal) authentication.getPrincipal();
         contactService.addContact(
                 principal.getId(),
-                request.recipientEmail(),
+                request.email(),
                 request.displayName(),
                 request.securityQuestion(),
                 request.securityAnswer());

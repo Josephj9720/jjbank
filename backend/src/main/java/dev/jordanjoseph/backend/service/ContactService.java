@@ -35,27 +35,27 @@ public class ContactService {
     }
 
     @Transactional
-    public void addContact(UUID ownerId, String recipientEmail, String displayName, String securityQuestion, String securityAnswer) {
+    public void addContact(UUID ownerId, String email, String displayName, String securityQuestion, String securityAnswer) {
 
         User owner = userRepository.findById(ownerId)
                 .orElseThrow(() -> new NoSuchElementException("The user for which the contact would be created doesn't exist."));
 
 
-        if(owner.getEmail().equals(recipientEmail)) {
+        if(owner.getEmail().equals(email)) {
             throw new IllegalArgumentException("You cannot add yourself as a contact.");
         }
 
-        if(contactRepository.existsByOwnerIdAndRecipientEmail(ownerId, recipientEmail)) {
-            throw new ResourceAlreadyExistsException("Contact", "recipientEmail", recipientEmail);
+        if(contactRepository.existsByOwnerIdAndEmail(ownerId, email)) {
+            throw new ResourceAlreadyExistsException("Contact", "email", email);
         }
 
         if(displayName.isBlank()) {
-            displayName = recipientEmail;
+            displayName = email;
         }
 
         Contact contact = new Contact();
         contact.setOwner(owner);
-        contact.setRecipientEmail(recipientEmail);
+        contact.setEmail(email);
         contact.setDisplayName(displayName);
         contact.setSecurityQuestion(securityQuestion);
         contact.setSecurityAnswerHash(passwordEncoder.encode(securityAnswer));
@@ -112,7 +112,7 @@ public class ContactService {
     }
 
     private ContactView toView(Contact contact) {
-        return new ContactView(contact.getId(), contact.getDisplayName(), contact.getRecipientEmail());
+        return new ContactView(contact.getId(), contact.getDisplayName(), contact.getEmail());
     }
 
 }

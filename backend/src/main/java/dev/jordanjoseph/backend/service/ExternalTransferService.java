@@ -81,7 +81,7 @@ public class ExternalTransferService {
 
                         //set recipient name and email
                         recipientName = token.getRecipient().getDisplayName();
-                        recipientEmail = token.getRecipient().getRecipientEmail();
+                        recipientEmail = token.getRecipient().getEmail();
 
                     } else {
                         //the recipient is a User of JJBank, keep the record, invalidate transfer token
@@ -157,7 +157,7 @@ public class ExternalTransferService {
                     if(senderAccountId.equals(recipientAccountId)) {
                         //recipient has not registered yet, use Contact info from TransferToken
                         recipientName = token.getRecipient().getDisplayName();
-                        recipientEmail = token.getRecipient().getRecipientEmail();
+                        recipientEmail = token.getRecipient().getEmail();
                     } else {
                         //recipient is a User of JJBank, get recipient User and info
                         User recipient = incoming.getAccount().getUser();

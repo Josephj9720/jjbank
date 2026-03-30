@@ -253,7 +253,7 @@ public class TransactionService {
 
         ExternalTransfer in = new ExternalTransfer();
         //verify if contact is a JJBank user
-        Optional<Account> recipientAccount = accountRepository.findFirstByUserEmailOrderByCreatedAtAsc(recipient.getRecipientEmail());
+        Optional<Account> recipientAccount = accountRepository.findFirstByUserEmailOrderByCreatedAtAsc(recipient.getEmail());
         if(recipientAccount.isPresent()) {
             in.setAccount(recipientAccount.get());
             recipientName = recipientAccount.get().getUser().getFullName();
@@ -298,7 +298,7 @@ public class TransactionService {
         InstantToDateConverter dateConverter = new InstantToDateConverter(); //make it a member variable when you change for @Autowired constructor injection
         eventPublisher.publishEvent(
                 new TransferInitiatedEvent(
-                        recipient.getRecipientEmail(),
+                        recipient.getEmail(),
                         recipientName,
                         dateConverter.toShortWeekdayLongDate(Instant.now()),
                         amount.toPlainString(),
@@ -343,7 +343,7 @@ public class TransactionService {
 
         //verify that currently logged in userEmail matches recipient email
         Contact recipientContact = token.getRecipient();
-        if(!userEmail.equals(recipientContact.getRecipientEmail())) {
+        if(!userEmail.equals(recipientContact.getEmail())) {
             throw new AccessDeniedException("You are not the recipient of the transfer.");
         }
 
@@ -570,7 +570,7 @@ public class TransactionService {
 
             //set recipient name and email
             recipientName = token.getRecipient().getDisplayName();
-            recipientEmail = token.getRecipient().getRecipientEmail();
+            recipientEmail = token.getRecipient().getEmail();
 
         } else {
             //the recipient is a JJBank User, keep the record, invalidate token

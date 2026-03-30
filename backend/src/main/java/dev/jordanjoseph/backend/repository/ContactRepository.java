@@ -12,5 +12,5 @@ import java.util.UUID;
 @Repository
 public interface ContactRepository extends JpaRepository<Contact, UUID> {
     Page<Contact> findByOwnerId(UUID ownerId, Pageable pageable);
-    boolean existsByOwnerIdAndRecipientEmail(UUID ownerId, String recipientEmail);
+    boolean existsByOwnerIdAndEmail(UUID ownerId, String email);
 }

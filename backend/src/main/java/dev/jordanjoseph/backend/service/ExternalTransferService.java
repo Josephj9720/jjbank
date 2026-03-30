@@ -1,11 +1,14 @@
 package dev.jordanjoseph.backend.service;
 
 import dev.jordanjoseph.backend.dto.transfer.event.TransferExpiredEvent;
+import dev.jordanjoseph.backend.dto.transfer.event.TransferReminderDateReachedEvent;
 import dev.jordanjoseph.backend.model.*;
 import dev.jordanjoseph.backend.repository.ExternalTransferRepository;
 import dev.jordanjoseph.backend.repository.TransferTokenRepository;
+import dev.jordanjoseph.backend.util.HashUtil;
 import dev.jordanjoseph.backend.util.InstantToDateConverter;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,6 +28,9 @@ public class ExternalTransferService {
     private ApplicationEventPublisher eventPublisher;
 
     private InstantToDateConverter instantToDateConverter;
+
+    @Value("${jjb.frontend.base.url}")
+    private String frontEndBaseUrl;
 
     @Autowired
     public ExternalTransferService(
@@ -123,10 +129,71 @@ public class ExternalTransferService {
 
     @Transactional
     public void sendReminders() {
-        externalTransferRepository.findByStatusAndReminderAtBeforeAndReminderSentFalse(ExternalTransfer.Status.PENDING, Instant.now())
-                .forEach(externalTransfer -> {
-                    //send message to recipient
-                    externalTransfer.setReminderSent(true);
+        externalTransferRepository.findByStatusAndTypeAndReminderAtBeforeAndReminderSentFalse(ExternalTransfer.Status.PENDING, Transaction.Type.TRANSFER_OUT,Instant.now())
+                .forEach(outgoing -> {
+                    ExternalTransfer incoming = getComplementaryTransfer(outgoing.getReference(), outgoing.getAccount().getId(), outgoing.getId());
+
+                    //set reminder sent to true
+                    outgoing.setReminderSent(true);
+                    incoming.setReminderSent(true);
+
+                    //get sender and recipient account IDs
+                    UUID senderAccountId = outgoing.getAccount().getId();
+                    UUID recipientAccountId = incoming.getAccount().getId();
+
+                    //setup variable to hold recipient name and email
+                    String recipientName;
+                    String recipientEmail;
+
+                    //get TransferToken and renew token hash
+                    TransferToken token = transferTokenRepository.findByIncomingTransferId(incoming.getId())
+                            .orElseThrow(() ->
+                                    new NoSuchElementException("Transfer Token could not be found for external transfer id: " + incoming.getId()));
+
+                    HashUtil hashUtil = new HashUtil();
+                    String newTransferTokenString = UUID.randomUUID().toString();
+                    token.setTokenHash(hashUtil.sha256(newTransferTokenString));
+
+                    if(senderAccountId.equals(recipientAccountId)) {
+                        //recipient has not registered yet, use Contact info from TransferToken
+                        recipientName = token.getRecipient().getDisplayName();
+                        recipientEmail = token.getRecipient().getRecipientEmail();
+                    } else {
+                        //recipient is a User of JJBank, get recipient User and info
+                        User recipient = incoming.getAccount().getUser();
+                        recipientName = recipient.getFullName();
+                        recipientEmail = recipient.getEmail();
+                    }
+
+                    //get Sender User
+                    User sender = outgoing.getAccount().getUser();
+
+                    //retrieve necessary info to fire event
+                    String date = instantToDateConverter.toShortWeekdayLongDate(outgoing.getCreatedAt());
+                    String expiry = instantToDateConverter.toLongDate(outgoing.getExpiresAt());
+                    String amount = outgoing.getAmount().toPlainString();
+                    String senderFullName = sender.getFullName();
+                    String sharedRef = outgoing.getReference();
+                    String message = outgoing.getMessage();
+
+                    //create new transfer link with transfer token
+                    String transferLinkPath = "/transfer/accept" + newTransferTokenString;
+                    String transferLink = frontEndBaseUrl + transferLinkPath;
+
+                    //notify recipient
+                    eventPublisher.publishEvent(new TransferReminderDateReachedEvent(
+                            recipientEmail,
+                            recipientName,
+                            date,
+                            expiry,
+                            amount,
+                            senderFullName,
+                            sharedRef,
+                            message,
+                            transferLink)
+                    );
+
+
                 });
     }
 

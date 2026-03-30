@@ -7,13 +7,11 @@ import java.time.format.DateTimeFormatter;
 
 public class InstantToDateConverter {
 
-    public String toAbbreviatedFullDate(Instant instant) {
+    public String toShortWeekdayLongDate(Instant instant) {
         LocalDate localDate = LocalDate.ofInstant(instant, ZoneId.systemDefault());
 
-        //format date (EE, MMM dd, yyyy)
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("EE, MMM dd, yyyy");
-        localDate.format(formatter);
-
-        return localDate.toString();
+        //format date (EEE, MMM dd, yyyy)
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("EEE, MMM dd, yyyy");
+        return localDate.format(formatter);
     }
 }

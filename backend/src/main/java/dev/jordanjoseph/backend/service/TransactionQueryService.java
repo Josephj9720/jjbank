@@ -156,7 +156,7 @@ public class TransactionQueryService {
 
     private String getDateFromInstant(Instant instant) {
         InstantToDateConverter converter = new InstantToDateConverter();
-        return converter.toAbbreviatedFullDate(instant);
+        return converter.toShortWeekdayLongDate(instant);
     }
 
 }

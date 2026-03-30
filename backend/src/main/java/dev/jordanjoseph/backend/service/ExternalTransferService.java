@@ -93,7 +93,7 @@ public class ExternalTransferService {
                     User sender = outgoing.getAccount().getUser();
 
                     //retrieve necessary information for events
-                    String expiryDate = instantToDateConverter.toAbbreviatedFullDate(outgoing.getExpiresAt());
+                    String expiryDate = instantToDateConverter.toShortWeekdayLongDate(outgoing.getExpiresAt());
                     String amount = outgoing.getAmount().toPlainString();
                     String sharedRef = outgoing.getReference();
 

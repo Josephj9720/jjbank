@@ -300,7 +300,7 @@ public class TransactionService {
                 new TransferInitiatedEvent(
                         recipient.getRecipientEmail(),
                         recipientName,
-                        dateConverter.toAbbreviatedFullDate(Instant.now()),
+                        dateConverter.toShortWeekdayLongDate(Instant.now()),
                         amount.toPlainString(),
                         sender.getFullName(),
                         sharedRef,
@@ -429,7 +429,7 @@ public class TransactionService {
         String recipientEmail = recipient.getEmail();
         String recipientFullName = recipient.getFullName();
         InstantToDateConverter dateConverter = new InstantToDateConverter(); //make it a member variable when you change for @Autowired constructor injection
-        String date = dateConverter.toAbbreviatedFullDate(now);
+        String date = dateConverter.toShortWeekdayLongDate(now);
         String amount = incomingTransfer.getAmount().toPlainString();
         String senderEmail = sender.getEmail();
         String senderFullName = sender.getFullName();
@@ -498,7 +498,7 @@ public class TransactionService {
         //load other information required for email
         String recipientFullName = recipient.getFullName();
         InstantToDateConverter dateConverter = new InstantToDateConverter(); //make it a member variable when you change for @Autowired constructor injection
-        String date = dateConverter.toAbbreviatedFullDate(now);
+        String date = dateConverter.toShortWeekdayLongDate(now);
         String amount = incomingTransfer.getAmount().toPlainString();
         String senderEmail = sender.getEmail();
         String senderFullName = sender.getFullName();
@@ -592,7 +592,7 @@ public class TransactionService {
 
         //retrieve necessary information to email recipient
         InstantToDateConverter dateConverter = new InstantToDateConverter();
-        String date = dateConverter.toAbbreviatedFullDate(Instant.now());
+        String date = dateConverter.toShortWeekdayLongDate(Instant.now());
         String amount = outgoingTransfer.getAmount().toPlainString();
         String senderFullName = sender.getFullName();
         String reference = outgoingTransfer.getReference();

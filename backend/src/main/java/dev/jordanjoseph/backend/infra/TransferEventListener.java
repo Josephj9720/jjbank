@@ -141,4 +141,23 @@ public class TransferEventListener {
                 emailContent.htmlContent());
     }
 
+    @TransactionalEventListener
+    public void onTransferReminderDateReached(TransferReminderDateReachedEvent event) {
+        EmailContent emailContent = emailTemplateService.recipientFundsPendingReminder(
+                event.recipientDisplayName(),
+                event.date(),
+                event.expiry(),
+                event.amount(),
+                event.senderFullName(),
+                event.reference(),
+                event.message(),
+                event.transferLink());
+
+        emailSender.sendFromNoReply(
+                event.recipientEmail(),
+                emailContent.subject(),
+                emailContent.textContent(),
+                emailContent.htmlContent());
+    }
+
 }

@@ -6,7 +6,7 @@ public record TransferInitiatedEvent(
         String date,
         String amount,
         String senderFullName,
-        String sharedRef,
+        String reference,
         String message,
         String transferLink
 ) {}

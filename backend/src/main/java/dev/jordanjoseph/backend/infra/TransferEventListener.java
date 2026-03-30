@@ -26,7 +26,7 @@ public class TransferEventListener {
                 event.date(),
                 event.amount(),
                 event.senderFullName(),
-                event.sharedRef(),
+                event.reference(),
                 event.message(),
                 event.transferLink());
 

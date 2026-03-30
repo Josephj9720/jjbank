@@ -141,6 +141,70 @@ public class EmailTemplateServiceTest {
         //verify no extra interactions
         verifyNoMoreInteractions(templateEngine);
     }
+
+    @Test
+    void shouldGenerateRecipientFundsPendingReminderTemplateWithCorrectContentAndContext(){
+
+        //define behaviour
+        when(templateEngine.process(eq("recipient_funds_pending_reminder"), any(Context.class)))
+                .thenReturn("<html>HTML</html>");
+        when(templateEngine.process(eq("text_recipient_funds_pending_reminder"), any(Context.class)))
+                .thenReturn("TEXT");
+
+        String recipient = "Ryu";
+        String date = "SUN, FEB 22, 2026";
+        String expiry = "MARCH 18, 2026";
+        String amount = "$50 (J)";
+        String sender = "Yellow Knife";
+        String reference = "TX-123456";
+        String message = "This is a test for transfers.";
+        String link = "www.jordanjoseph.dev";
+
+        //act - call method
+        EmailContent result = service.recipientFundsPendingReminder(recipient, date, expiry, amount, sender, reference, message, link);
+
+        //assert DTO values
+        assertNotNull(result, "EmailContent should not be null");
+        assertNotNull(result.subject(), "Subject should not be null");
+        assertEquals("<html>HTML</html>", result.htmlContent(), "HTML content mismatch");
+        assertEquals("TEXT", result.textContent(), "TEXT content mismatch");
+
+        //capture html Context arguments to inspect variables
+        ArgumentCaptor<Context> contextCaptor = ArgumentCaptor.forClass(Context.class);
+        verify(templateEngine).process(eq("recipient_funds_pending_reminder"), contextCaptor.capture());
+        Context htmlContext = contextCaptor.getValue();
+
+        assertEquals(recipient, htmlContext.getVariable("recipient"));
+        assertEquals(date, htmlContext.getVariable("date"));
+        assertEquals(expiry, htmlContext.getVariable("expiry"));
+        assertEquals(amount, htmlContext.getVariable("amount"));
+        assertEquals(sender, htmlContext.getVariable("sender"));
+        assertEquals(reference, htmlContext.getVariable("reference"));
+        assertEquals(message, htmlContext.getVariable("message"));
+        assertEquals(link, htmlContext.getVariable("link"));
+
+        //capture text Context arguments to inspect variables
+        ArgumentCaptor<Context> textContextCaptor = ArgumentCaptor.forClass(Context.class);
+        verify(templateEngine).process(eq("text_recipient_funds_pending_reminder"), textContextCaptor.capture());
+        Context textContext = textContextCaptor.getValue();
+
+        assertEquals(recipient, textContext.getVariable("recipient"));
+        assertEquals(date, textContext.getVariable("date"));
+        assertEquals(expiry, textContext.getVariable("expiry"));
+        assertEquals(amount, textContext.getVariable("amount"));
+        assertEquals(sender, textContext.getVariable("sender"));
+        assertEquals(reference, textContext.getVariable("reference"));
+        assertEquals(message, textContext.getVariable("message"));
+        assertEquals(link, textContext.getVariable("link"));
+
+        //verify that both templates were called exactly once
+        verify(templateEngine, times(1)).process(eq("recipient_funds_pending_reminder"), any(Context.class));
+        verify(templateEngine, times(1)).process(eq("text_recipient_funds_pending_reminder"), any(Context.class));
+
+        //verify no extra interactions
+        verifyNoMoreInteractions(templateEngine);
+    }
+
     @Test
     void shouldGenerateRecipientTransferCancelledTemplateWithCorrectContentAndContext(){
 

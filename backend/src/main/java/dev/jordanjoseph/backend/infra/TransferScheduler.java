@@ -22,7 +22,6 @@ public class TransferScheduler {
 
     @Scheduled(fixedRate = 60000)
     public void sendTransferReminder() {
-        //create method in transaction service for it
-        //use transaction repo too
+        externalTransferService.sendReminders();
     }
 }

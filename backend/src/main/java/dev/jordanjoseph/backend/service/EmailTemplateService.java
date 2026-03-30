@@ -66,6 +66,34 @@ public class EmailTemplateService {
         return new EmailContent(subject, htmlContent, textContent);
     }
 
+    public EmailContent recipientFundsPendingReminder(
+            String recipient,
+            String date,
+            String expiry,
+            String amount,
+            String sender,
+            String reference,
+            String message,
+            String link) {
+
+        Context context = new Context();
+        context.setVariable("recipient", recipient);
+        context.setVariable("date", date);
+        context.setVariable("expiry", expiry);
+        context.setVariable("amount", amount);
+        context.setVariable("sender", sender);
+        context.setVariable("reference", reference);
+        context.setVariable("message", message);
+        context.setVariable("link", link);
+
+        String htmlContent = templateEngine.process("recipient_funds_pending_reminder", context);
+        String textContent = templateEngine.process("text_recipient_funds_pending_reminder", context);
+
+        String subject = "JJBank External Transfer - Reminder: You have received " + amount + "$J from " + sender;
+
+        return new EmailContent(subject, htmlContent, textContent);
+    }
+
     public EmailContent recipientTransferCancelled(
             String recipient,
             String date,

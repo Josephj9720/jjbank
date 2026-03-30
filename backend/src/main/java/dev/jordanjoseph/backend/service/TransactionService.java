@@ -56,7 +56,7 @@ public class TransactionService {
     private ApplicationEventPublisher eventPublisher;
 
     @Value("${jjb.external-transfer.expiry-days}")
-    private double externalTransferExpiryDays;
+    private long externalTransferExpiryDays;
 
     @Value("${jjb.frontend.base.url}")
     private String frontEndBaseUrl;
@@ -239,8 +239,8 @@ public class TransactionService {
         out.setReference(sharedRef);
         out.setStatus(ExternalTransfer.Status.PENDING);
         out.setMessage(request.message());
-        Instant expiresAt = out.getCreatedAt().plus(10, ChronoUnit.MINUTES); //change value, this is for testing
-        Instant reminderAt = out.getCreatedAt().plus(5, ChronoUnit.MINUTES); //change value, this is for testing
+        Instant expiresAt = out.getCreatedAt().plus(externalTransferExpiryDays, ChronoUnit.DAYS);
+        Instant reminderAt = out.getCreatedAt().plus(externalTransferExpiryDays, ChronoUnit.DAYS);
         out.setExpiresAt(expiresAt); //change this is for testing
         out.setReminderAt(reminderAt);
         out.setSecurityQuestion(recipient.getSecurityQuestion());

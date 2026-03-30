@@ -7,7 +7,7 @@ public record TransferReminderDateReachedEvent(
         String expiry,
         String amount,
         String senderFullName,
-        String sharedRef,
+        String reference,
         String message,
         String transferLink
 ) {}

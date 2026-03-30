@@ -14,5 +14,5 @@ public interface ExternalTransferRepository extends JpaRepository<ExternalTransf
     List<ExternalTransfer> findByReferenceAndAccountIdNot(String reference, UUID accountId);
     List<ExternalTransfer> findByReferenceAndAccountIdAndIdNot(String reference, UUID accountId, UUID id);
     List<ExternalTransfer> findByStatusAndTypeAndExpiresAtBefore(ExternalTransfer.Status status, Transaction.Type type, Instant time);
-    List<ExternalTransfer> findByStatusAndReminderAtBeforeAndReminderSentFalse(ExternalTransfer.Status status, Instant time);
+    List<ExternalTransfer> findByStatusAndTypeAndReminderAtBeforeAndReminderSentFalse(ExternalTransfer.Status status, Transaction.Type type, Instant time);
 }

@@ -14,4 +14,12 @@ public class InstantToDateConverter {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("EEE, MMM dd, yyyy");
         return localDate.format(formatter);
     }
+
+    public String toLongDate(Instant instant) {
+        LocalDate localDate = LocalDate.ofInstant(instant, ZoneId.systemDefault());
+
+        //format date (MMMM dd, yyyy)
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMMM dd, yyyy");
+        return localDate.format(formatter);
+    }
 }

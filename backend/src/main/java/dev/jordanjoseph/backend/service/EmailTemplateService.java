@@ -207,4 +207,30 @@ public class EmailTemplateService {
         return new EmailContent(subject, htmlContent, textContent);
     }
 
+    public EmailContent senderTransferRequested(
+            String sender,
+            String date,
+            String amount,
+            String recipient,
+            String reference,
+            String message,
+            String link) {
+
+        Context context = new Context();
+        context.setVariable("sender", sender);
+        context.setVariable("date", date);
+        context.setVariable("amount", amount);
+        context.setVariable("recipient", recipient);
+        context.setVariable("reference", reference);
+        context.setVariable("message", message);
+        context.setVariable("link", link);
+
+        String htmlContent = templateEngine.process("sender_transfer_requested", context);
+        String textContent = templateEngine.process("text_sender_transfer_requested", context);
+
+        String subject = "JJBank External Transfer: " + recipient + " has sent you a transfer request.";
+
+        return new EmailContent(subject, htmlContent, textContent);
+    }
+
 }

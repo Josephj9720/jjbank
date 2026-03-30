@@ -177,7 +177,7 @@ public class ExternalTransferService {
                     String message = outgoing.getMessage();
 
                     //create new transfer link with transfer token
-                    String transferLinkPath = "/transfer/accept" + newTransferTokenString;
+                    String transferLinkPath = "/transfer/claim/" + newTransferTokenString;
                     String transferLink = frontEndBaseUrl + transferLinkPath;
 
                     //notify recipient

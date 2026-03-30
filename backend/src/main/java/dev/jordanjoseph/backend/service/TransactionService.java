@@ -291,7 +291,7 @@ public class TransactionService {
         idempotencyKeyRepository.save(key);
 
         //create transfer link with transfer token
-        String transferLinkPath = "/transfer/accept/" + transferTokenString;
+        String transferLinkPath = "/transfer/claim/" + transferTokenString;
         String transferLink = frontEndBaseUrl + transferLinkPath;
 
         //notify recipient

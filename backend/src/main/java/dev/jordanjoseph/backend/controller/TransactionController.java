@@ -87,4 +87,12 @@ public class TransactionController {
         return ResponseEntity.status(HttpStatus.OK).build();
     }
 
+    @PostMapping("/external/transfer/request")
+    public ResponseEntity<Void> requestExternalTransfer(
+            @RequestBody IncomingExternalTransferRequest request,
+            @RequestHeader(value = "Idempotency-Key", required = false) String idemKey){
+        transactionService.requestExternalTransfer(request, idemKey);
+        return ResponseEntity.status(HttpStatus.OK).build();
+    }
+
 }

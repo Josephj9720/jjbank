@@ -556,10 +556,19 @@ public class TransactionService {
 
         //get TransferToken
         TransferToken token = transferTokenRepository.findByIncomingTransferId(incomingTransfer.getId())
-                .orElseThrow(() ->
-                        new NoSuchElementException("Transfer Token could not be found for external transfer id: " + incomingTransfer.getId()));
+                .orElse(null);
 
-        if(senderAccountId.equals(recipientAccountId)) {
+        if(token == null){
+            //the recipient is a User of JJBank, no transfer token created for a requested transfer
+
+            //get recipient User
+            User recipient = incomingTransfer.getAccount().getUser();
+
+            //set recipient name and email
+            recipientName = recipient.getFullName();
+            recipientEmail = recipient.getEmail();
+
+        } else if(senderAccountId.equals(recipientAccountId)) {
             //the transfer was sent before the recipient had registered, delete their record of the transaction
             //only need the record for the user who is a JJBank user
             transferTokenRepository.delete(token);

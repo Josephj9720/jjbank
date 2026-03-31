@@ -142,10 +142,6 @@ public class ExternalTransferService {
                 .forEach(outgoing -> {
                     ExternalTransfer incoming = getComplementaryTransfer(outgoing.getReference(), outgoing.getAccount().getId(), outgoing.getId());
 
-                    //set reminder sent to true
-                    outgoing.setReminderSent(true);
-                    incoming.setReminderSent(true);
-
                     //get sender and recipient account IDs
                     UUID senderAccountId = outgoing.getAccount().getId();
                     UUID recipientAccountId = incoming.getAccount().getId();
@@ -161,6 +157,11 @@ public class ExternalTransferService {
                     //token is null if recipient requested transfer,
                     //only send reminders to recipients when sender has initiated the transfer
                     if(token != null) {
+
+                        //set reminder sent to true
+                        outgoing.setReminderSent(true);
+                        incoming.setReminderSent(true);
+
                         HashUtil hashUtil = new HashUtil();
                         String newTransferTokenString = UUID.randomUUID().toString();
                         token.setTokenHash(hashUtil.sha256(newTransferTokenString));

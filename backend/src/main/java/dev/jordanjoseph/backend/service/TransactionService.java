@@ -533,9 +533,6 @@ public class TransactionService {
         //ensure sender matches currently logged in user
         accountGuard.requireOwned(sender.getId());
 
-        //refund sender
-        senderAccount.setBalance(senderAccount.getBalance().add(outgoingTransfer.getAmount()));
-
         //load incoming transfer
         ExternalTransfer incomingTransfer = this.getComplementaryTransfer(
                 outgoingTransfer.getReference(),
@@ -568,26 +565,33 @@ public class TransactionService {
             recipientName = recipient.getFullName();
             recipientEmail = recipient.getEmail();
 
-        } else if(senderAccountId.equals(recipientAccountId)) {
-            //the transfer was sent before the recipient had registered, delete their record of the transaction
-            //only need the record for the user who is a JJBank user
-            transferTokenRepository.delete(token);
-            transactionRepository.delete(incomingTransfer);
-
-            //set recipient name and email
-            recipientName = token.getRecipient().getDisplayName();
-            recipientEmail = token.getRecipient().getEmail();
-
         } else {
-            //the recipient is a JJBank User, keep the record, invalidate token
-            token.setInvalid(true);
 
-            //get recipient User
-            User recipient = incomingTransfer.getAccount().getUser();
+            //refund sender because funds have been taken when they initiated the transfer
+            senderAccount.setBalance(senderAccount.getBalance().add(outgoingTransfer.getAmount()));
 
-            //set recipient name and email
-            recipientName = recipient.getFullName();
-            recipientEmail = recipient.getEmail();
+            if(senderAccountId.equals(recipientAccountId)) {
+                //the transfer was sent before the recipient had registered, delete their record of the transaction
+                //only need the record for the user who is a JJBank user
+                transferTokenRepository.delete(token);
+                transactionRepository.delete(incomingTransfer);
+
+                //set recipient name and email
+                recipientName = token.getRecipient().getDisplayName();
+                recipientEmail = token.getRecipient().getEmail();
+
+            } else {
+                //the recipient is a JJBank User, keep the record, invalidate token
+                token.setInvalid(true);
+
+                //get recipient User
+                User recipient = incomingTransfer.getAccount().getUser();
+
+                //set recipient name and email
+                recipientName = recipient.getFullName();
+                recipientEmail = recipient.getEmail();
+            }
+
         }
 
         //record idempotency after success

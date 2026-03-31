@@ -54,10 +54,6 @@ public class ExternalTransferService {
                     outgoing.setStatus(ExternalTransfer.Status.EXPIRED);
                     incoming.setStatus(ExternalTransfer.Status.EXPIRED);
 
-                    //refund sender
-                    Account senderAccount = outgoing.getAccount();
-                    senderAccount.setBalance(senderAccount.getBalance().add(outgoing.getAmount()));
-
                     //invalidate
 
                     //get sender and recipient account IDs
@@ -82,26 +78,33 @@ public class ExternalTransferService {
                         recipientName = recipient.getFullName();
                         recipientEmail = recipient.getEmail();
 
-                    } else if(senderAccountId.equals(recipientAccountId)) {
-                        //the recipient has not registered an account with JJBank, delete their record of the transaction
-                        //only need the record for the sender who is a JJBank user
-                        transferTokenRepository.delete(token);
-                        externalTransferRepository.delete(incoming);
-
-                        //set recipient name and email
-                        recipientName = token.getRecipient().getDisplayName();
-                        recipientEmail = token.getRecipient().getEmail();
-
                     } else {
-                        //the recipient is a User of JJBank, keep the record, invalidate transfer token
-                        token.setInvalid(true);
 
-                        //get recipient User
-                        User recipient = incoming.getAccount().getUser();
+                        //refund sender because funds have been taken when they initiated the transfer
+                        Account senderAccount = outgoing.getAccount();
+                        senderAccount.setBalance(senderAccount.getBalance().add(outgoing.getAmount()));
 
-                        //set recipient name and email
-                        recipientName = recipient.getFullName();
-                        recipientEmail = recipient.getEmail();
+                        if(senderAccountId.equals(recipientAccountId)) {
+                            //the recipient has not registered an account with JJBank, delete their record of the transaction
+                            //only need the record for the sender who is a JJBank user
+                            transferTokenRepository.delete(token);
+                            externalTransferRepository.delete(incoming);
+
+                            //set recipient name and email
+                            recipientName = token.getRecipient().getDisplayName();
+                            recipientEmail = token.getRecipient().getEmail();
+
+                        } else {
+                            //the recipient is a User of JJBank, keep the record, invalidate transfer token
+                            token.setInvalid(true);
+
+                            //get recipient User
+                            User recipient = incoming.getAccount().getUser();
+
+                            //set recipient name and email
+                            recipientName = recipient.getFullName();
+                            recipientEmail = recipient.getEmail();
+                        }
                     }
 
                     //get sender User

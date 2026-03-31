@@ -618,6 +618,7 @@ public class TransactionService {
         );
     }
 
+    @Transactional
     public void requestExternalTransfer(IncomingExternalTransferRequest request, String idemKey) {
 
         //load recipient's account
@@ -706,6 +707,7 @@ public class TransactionService {
         );
     }
 
+    @Transactional
     public void acceptExternalTransferRequest(AcceptExternalTransferRequest request, String idemKey) {
 
         //load outgoing ExternalTransfer and sender's User

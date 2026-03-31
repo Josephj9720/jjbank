@@ -4,10 +4,7 @@ import dev.jordanjoseph.backend.dto.account.AccountView;
 import dev.jordanjoseph.backend.dto.common.ApiResult;
 import dev.jordanjoseph.backend.dto.transfer.*;
 
-import dev.jordanjoseph.backend.dto.transfer.event.TransferCancelledEvent;
-import dev.jordanjoseph.backend.dto.transfer.event.TransferCompletedEvent;
-import dev.jordanjoseph.backend.dto.transfer.event.TransferDeclinedEvent;
-import dev.jordanjoseph.backend.dto.transfer.event.TransferInitiatedEvent;
+import dev.jordanjoseph.backend.dto.transfer.event.*;
 import dev.jordanjoseph.backend.exception.DuplicateTransactionException;
 import dev.jordanjoseph.backend.model.*;
 import dev.jordanjoseph.backend.repository.*;
@@ -605,6 +602,94 @@ public class TransactionService {
                 amount,
                 senderFullName,
                 reference)
+        );
+    }
+
+    public void requestExternalTransfer(IncomingExternalTransferRequest request, String idemKey) {
+
+        //load recipient's account
+        Account recipientAccount = this.getAccount(request.recipientAccountId());
+        User recipient = recipientAccount.getUser();
+
+        if(idemKey != null && !idemKey.isBlank()) {
+            if(idempotencyKeyRepository.existsByOwnerIdAndKeyValue(recipient.getId(), idemKey)) {
+                throw new DuplicateTransactionException("This transfer has already been requested. This is a duplicate transaction.");
+            }
+        }
+
+        //ensure recipient is the currently logged-in user
+        accountGuard.requireOwned(recipient.getId());
+
+        //compute shared reference
+        String sharedRef = "EXT-TX-" + Instant.now().toEpochMilli();
+
+
+        //retrieve contact information of the sender
+        Contact senderContact = contactRepository.findById(request.contactId())
+                .orElseThrow(() -> new NoSuchElementException("No contact was found with the following contact id: " + request.contactId()));
+
+        //ensure sender is a JJBank User
+        Account senderAccount = accountRepository.findFirstByUserEmailOrderByCreatedAtAsc(senderContact.getEmail())
+                .orElseThrow(() -> new NoSuchElementException("No account was found for the following user email: " + senderContact.getEmail()));
+
+        User sender = senderAccount.getUser();
+
+        //ensure amount is correct
+        BigDecimal amount = request.amount();
+        accountGuard.requirePositive(amount);
+        accountGuard.requireSufficientFunds(senderAccount.getBalance(), amount);
+
+        //get request message
+        String message = request.message();
+
+        //persist transactions
+        ExternalTransfer in = new ExternalTransfer();
+        in.setAccount(recipientAccount);
+        in.setType(Transaction.Type.TRANSFER_IN);
+        in.setAmount(amount);
+        in.setReference(sharedRef);
+        in.setStatus(ExternalTransfer.Status.PENDING);
+        in.setMessage(message);
+        Instant expiresAt = in.getCreatedAt().plus(externalTransferExpiryDays, ChronoUnit.DAYS);
+        Instant reminderAt = in.getCreatedAt().plus(externalTransferExpiryDays, ChronoUnit.DAYS);
+        in.setExpiresAt(expiresAt);
+        in.setReminderAt(reminderAt);
+        transactionRepository.save(in);
+
+        ExternalTransfer out = new ExternalTransfer();
+        out.setAccount(senderAccount);
+        out.setType(Transaction.Type.TRANSFER_OUT);
+        out.setAmount(amount);
+        out.setReference(sharedRef);
+        out.setStatus(ExternalTransfer.Status.PENDING);
+        out.setMessage(message);
+        out.setExpiresAt(expiresAt);
+        out.setReminderAt(reminderAt);
+        transactionRepository.save(out);
+
+        //record idempotency after success
+        IdempotencyKey key = new IdempotencyKey();
+        key.setOwnerId(recipient.getId());
+        key.setKeyValue(idemKey);
+        idempotencyKeyRepository.save(key);
+
+        //create transfer link with transfer id
+        String transferLinkPath = "/transfer/requests/" + out.getId();
+        String transferLink = frontEndBaseUrl + transferLinkPath;
+
+        //notify sender
+        InstantToDateConverter dateConverter = new InstantToDateConverter(); //make it a member variable when you change for @Autowired constructor injection
+        eventPublisher.publishEvent(
+                new TransferRequestedEvent(
+                        sender.getEmail(),
+                        sender.getFullName(),
+                        dateConverter.toShortWeekdayLongDate(in.getCreatedAt()),
+                        amount.toPlainString(),
+                        recipient.getFullName(),
+                        sharedRef,
+                        message,
+                        transferLink
+                )
         );
     }
 

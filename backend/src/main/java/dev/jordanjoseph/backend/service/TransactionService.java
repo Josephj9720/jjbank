@@ -706,6 +706,95 @@ public class TransactionService {
         );
     }
 
+    public void acceptExternalTransferRequest(AcceptExternalTransferRequest request, String idemKey) {
+
+        //load outgoing ExternalTransfer and sender's User
+        ExternalTransfer outgoingTransfer = (ExternalTransfer) transactionRepository.findById(request.outgoingTransferId())
+                .orElseThrow(() -> new NoSuchElementException(
+                        "No external transfer was found with the following id: " + request.outgoingTransferId())
+                );
+        User sender = outgoingTransfer.getAccount().getUser();
+
+        if(idemKey != null && !idemKey.isBlank()) {
+            if(idempotencyKeyRepository.existsByOwnerIdAndKeyValue(sender.getId(), idemKey)) {
+                throw new DuplicateTransactionException("This transfer has already been accepted. This is a duplicate transaction.");
+            }
+        }
+
+        //ensure sender matches currently logged-in user
+        accountGuard.requireOwned(sender.getId());
+
+        //load incoming transfer
+        ExternalTransfer incomingTransfer = this.getComplementaryTransfer(
+                outgoingTransfer.getReference(),
+                outgoingTransfer.getAccount().getId(),
+                outgoingTransfer.getId());
+
+        //get sender and recipient accounts
+        Account senderAccount = this.getAccount(request.senderAccountId()); //selected by sender
+        Account recipientAccount = incomingTransfer.getAccount();
+
+        //get recipient's User
+        User recipient = recipientAccount.getUser();
+
+        //take funds from sender's selected account
+        senderAccount.setBalance(senderAccount.getBalance().subtract(outgoingTransfer.getAmount()));
+
+        //assign sender's selected account to outgoing transfer
+        outgoingTransfer.setAccount(senderAccount);
+
+        //add funds to recipient's account
+        recipientAccount.setBalance(recipientAccount.getBalance().add(outgoingTransfer.getAmount()));
+
+        //set both records as COMPLETED
+        Instant now = Instant.now();
+        outgoingTransfer.setStatus(ExternalTransfer.Status.COMPLETED);
+        outgoingTransfer.setCompletedAt(now);
+        incomingTransfer.setStatus(ExternalTransfer.Status.COMPLETED);
+        incomingTransfer.setCompletedAt(now);
+
+        //record idempotency after success
+        IdempotencyKey key = new IdempotencyKey();
+        key.setOwnerId(sender.getId());
+        key.setKeyValue(idemKey);
+        idempotencyKeyRepository.save(key);
+
+        //load information required for emails
+        String recipientEmail = recipient.getEmail();
+        String recipientFullName = recipient.getFullName();
+        InstantToDateConverter dateConverter = new InstantToDateConverter();
+        String date = dateConverter.toShortWeekdayLongDate(now);
+        String amount = outgoingTransfer.getAmount().toPlainString();
+        String senderEmail = sender.getEmail();
+        String senderFullName = sender.getFullName();
+        String reference = outgoingTransfer.getReference();
+        String message = outgoingTransfer.getMessage();
+
+        //notify recipient
+        eventPublisher.publishEvent(new TransferCompletedEvent(
+                "recipient",
+                recipientEmail,
+                recipientFullName,
+                date,
+                amount,
+                senderFullName,
+                reference,
+                message)
+        );
+
+        //notify sender
+        eventPublisher.publishEvent(new TransferCompletedEvent(
+                "sender",
+                senderEmail,
+                recipientFullName,
+                date,
+                amount,
+                senderFullName,
+                reference,
+                message)
+        );
+    }
+
     private ExternalTransfer getComplementaryTransfer(String reference, UUID accountId, UUID transactionId) {
         List<Transaction> transactions = transactionRepository
                 .findByReferenceAndAccountIdNot(reference, accountId);

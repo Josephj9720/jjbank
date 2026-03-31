@@ -28,16 +28,12 @@ public class ExternalTransfer extends Transaction {
     @Column(nullable = false)
     private Instant expiresAt;
 
-    @Column
     private Instant completedAt;
 
-    @Column(nullable = false)
     private String securityQuestion;
 
-    @Column(nullable = false)
     private String securityAnswerHash;
 
-    @Column(nullable = false)
     private int failedSecurityAttempts;
 
     public Status getStatus() {

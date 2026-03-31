@@ -156,52 +156,54 @@ public class ExternalTransferService {
 
                     //get TransferToken and renew token hash
                     TransferToken token = transferTokenRepository.findByIncomingTransferId(incoming.getId())
-                            .orElseThrow(() ->
-                                    new NoSuchElementException("Transfer Token could not be found for external transfer id: " + incoming.getId()));
+                            .orElse(null);
 
-                    HashUtil hashUtil = new HashUtil();
-                    String newTransferTokenString = UUID.randomUUID().toString();
-                    token.setTokenHash(hashUtil.sha256(newTransferTokenString));
+                    //token is null if recipient requested transfer,
+                    //only send reminders to recipients when sender has initiated the transfer
+                    if(token != null) {
+                        HashUtil hashUtil = new HashUtil();
+                        String newTransferTokenString = UUID.randomUUID().toString();
+                        token.setTokenHash(hashUtil.sha256(newTransferTokenString));
 
-                    if(senderAccountId.equals(recipientAccountId)) {
-                        //recipient has not registered yet, use Contact info from TransferToken
-                        recipientName = token.getRecipient().getDisplayName();
-                        recipientEmail = token.getRecipient().getEmail();
-                    } else {
-                        //recipient is a User of JJBank, get recipient User and info
-                        User recipient = incoming.getAccount().getUser();
-                        recipientName = recipient.getFullName();
-                        recipientEmail = recipient.getEmail();
+                        if(senderAccountId.equals(recipientAccountId)) {
+                            //recipient has not registered yet, use Contact info from TransferToken
+                            recipientName = token.getRecipient().getDisplayName();
+                            recipientEmail = token.getRecipient().getEmail();
+                        } else {
+                            //recipient is a User of JJBank, get recipient User and info
+                            User recipient = incoming.getAccount().getUser();
+                            recipientName = recipient.getFullName();
+                            recipientEmail = recipient.getEmail();
+                        }
+
+                        //get Sender User
+                        User sender = outgoing.getAccount().getUser();
+
+                        //retrieve necessary info to fire event
+                        String date = instantToDateConverter.toShortWeekdayLongDate(outgoing.getCreatedAt());
+                        String expiry = instantToDateConverter.toLongDate(outgoing.getExpiresAt());
+                        String amount = outgoing.getAmount().toPlainString();
+                        String senderFullName = sender.getFullName();
+                        String sharedRef = outgoing.getReference();
+                        String message = outgoing.getMessage();
+
+                        //create new transfer link with transfer token
+                        String transferLinkPath = "/transfer/claim/" + newTransferTokenString;
+                        String transferLink = frontEndBaseUrl + transferLinkPath;
+
+                        //notify recipient
+                        eventPublisher.publishEvent(new TransferReminderDateReachedEvent(
+                                recipientEmail,
+                                recipientName,
+                                date,
+                                expiry,
+                                amount,
+                                senderFullName,
+                                sharedRef,
+                                message,
+                                transferLink)
+                        );
                     }
-
-                    //get Sender User
-                    User sender = outgoing.getAccount().getUser();
-
-                    //retrieve necessary info to fire event
-                    String date = instantToDateConverter.toShortWeekdayLongDate(outgoing.getCreatedAt());
-                    String expiry = instantToDateConverter.toLongDate(outgoing.getExpiresAt());
-                    String amount = outgoing.getAmount().toPlainString();
-                    String senderFullName = sender.getFullName();
-                    String sharedRef = outgoing.getReference();
-                    String message = outgoing.getMessage();
-
-                    //create new transfer link with transfer token
-                    String transferLinkPath = "/transfer/claim/" + newTransferTokenString;
-                    String transferLink = frontEndBaseUrl + transferLinkPath;
-
-                    //notify recipient
-                    eventPublisher.publishEvent(new TransferReminderDateReachedEvent(
-                            recipientEmail,
-                            recipientName,
-                            date,
-                            expiry,
-                            amount,
-                            senderFullName,
-                            sharedRef,
-                            message,
-                            transferLink)
-                    );
-
 
                 });
     }

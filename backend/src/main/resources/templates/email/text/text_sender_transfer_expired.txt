@@ -1,0 +1,12 @@
+Hello [[${sender}]],
+
+Your transfer to [[${recipient}]] has expired.
+
+      Date: [[${date}]]
+      Amount: $[[${amount}]] (J)
+      Status: Expired
+      Reference: [[${reference}]]
+
+If you didn't make this transaction, please contact support immediately.
+
+© 2026 JJBank

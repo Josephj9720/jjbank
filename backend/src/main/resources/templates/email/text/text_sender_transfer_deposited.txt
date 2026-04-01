@@ -1,0 +1,13 @@
+Hello [[${sender}]],
+
+Your transfer was successfully accepted and deposited.
+      [# th:if="${message}"]
+      Message: [[${message}]][/]
+      Date: [[${date}]]
+      Amount: $[[${amount}]] (J)
+      To: [[${recipient}]]
+      Reference: [[${reference}]]
+
+If you didn't make this transaction, please contact support immediately.
+
+© 2026 JJBank

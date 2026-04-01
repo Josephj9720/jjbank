@@ -1,22 +1,31 @@
 package dev.jordanjoseph.backend.service;
 
 import dev.jordanjoseph.backend.dto.account.AccountView;
-import dev.jordanjoseph.backend.dto.transfer.TransferRequest;
-import dev.jordanjoseph.backend.dto.transfer.TransferResponse;
+import dev.jordanjoseph.backend.dto.common.ApiResult;
+import dev.jordanjoseph.backend.dto.transfer.*;
 
-import dev.jordanjoseph.backend.model.Account;
-import dev.jordanjoseph.backend.model.IdempotencyKey;
-import dev.jordanjoseph.backend.model.Transaction;
-import dev.jordanjoseph.backend.repository.AccountRepository;
-import dev.jordanjoseph.backend.repository.IdempotencyKeyRepository;
-import dev.jordanjoseph.backend.repository.TransactionRepository;
+import dev.jordanjoseph.backend.dto.transfer.event.*;
+import dev.jordanjoseph.backend.exception.DuplicateTransactionException;
+import dev.jordanjoseph.backend.model.*;
+import dev.jordanjoseph.backend.repository.*;
 import dev.jordanjoseph.backend.util.AccountGuard;
+import dev.jordanjoseph.backend.util.HashUtil;
+import dev.jordanjoseph.backend.util.InstantToDateConverter;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -32,7 +41,22 @@ public class TransactionService {
     private IdempotencyKeyRepository idempotencyKeyRepository;
 
     @Autowired
+    private ContactRepository contactRepository;
+
+    @Autowired
+    private TransferTokenRepository transferTokenRepository;
+
+    @Autowired
     private AccountGuard accountGuard;
+
+    @Autowired
+    private ApplicationEventPublisher eventPublisher;
+
+    @Value("${jjb.external-transfer.expiry-days}")
+    private long externalTransferExpiryDays;
+
+    @Value("${jjb.frontend.base.url}")
+    private String frontEndBaseUrl;
 
     @Transactional
     public AccountView deposit(UUID accountId, BigDecimal amount, String idemKey) {
@@ -111,25 +135,28 @@ public class TransactionService {
     }
 
     @Transactional
-    public TransferResponse transfer(TransferRequest request, String idemKey) {
+    public InternalTransferResponse internalTransfer(InternalTransferRequest request, String idemKey) {
 
-        //load sender account
+        //load source account
         Account from = this.getAccount(request.fromAccountId());
-        UUID senderId = from.getUser().getId();
+        UUID fromUserId = from.getUser().getId();
 
         if(idemKey != null && !idemKey.isBlank()) {
-            if(idempotencyKeyRepository.existsByOwnerIdAndKeyValue(senderId, idemKey)) {
-                return new TransferResponse(
-                        request.fromAccountId(), request.toAccountId(), request.amount(), request.reference()
+            if(idempotencyKeyRepository.existsByOwnerIdAndKeyValue(fromUserId, idemKey)) {
+                return new InternalTransferResponse(
+                        request.fromAccountId(), request.toAccountId(), request.amount(), "Duplicate Request"
                 );
             }
         }
 
-        //load recipient account
+        //load destination account
         Account to = this.getAccount(request.toAccountId());
+        UUID toUserId = to.getUser().getId();
 
-        //ownership check: can only send from sender's own account
-        accountGuard.requireOwned(senderId);
+        //ownership check: can only send from user's own account
+        accountGuard.requireOwned(fromUserId);
+        //make sure destination account also belong to user
+        accountGuard.requireOwned(toUserId);
 
         //can't transfer to same account
         accountGuard.requireNotSame(from.getId(), to.getId());
@@ -138,10 +165,8 @@ public class TransactionService {
         accountGuard.requirePositive(amount);
         accountGuard.requireSufficientFunds(from.getBalance(), amount);
 
-        //compute shared reference, if not sent by client, create reference
-        String sharedRef = request.reference() != null && !request.reference().isBlank()
-                ? request.reference()
-                : "TX-" + Instant.now().toEpochMilli();
+        //compute shared reference
+        String sharedRef = "TX-" + Instant.now().toEpochMilli();
 
         //execute operations
         from.setBalance(from.getBalance().subtract(amount));
@@ -165,11 +190,637 @@ public class TransactionService {
         //record idempotency after success
         if(idemKey != null && !idemKey.isBlank()) {
             IdempotencyKey key = new IdempotencyKey();
-            key.setOwnerId(senderId);
+            key.setOwnerId(fromUserId);
             key.setKeyValue(idemKey);
             idempotencyKeyRepository.save(key);
         }
-        return new TransferResponse(from.getId(), to.getId(), amount, sharedRef);
+        return new InternalTransferResponse(from.getId(), to.getId(), amount, sharedRef);
+    }
+
+    @Transactional
+    public void initiateExternalTransfer(OutgoingExternalTransferRequest request, String idemKey) {
+
+        //load sender's account
+        Account senderAccount = this.getAccount(request.senderAccountId());
+        User sender = senderAccount.getUser();
+
+        if(idemKey != null && !idemKey.isBlank()) {
+            if(idempotencyKeyRepository.existsByOwnerIdAndKeyValue(sender.getId(), idemKey)) {
+                throw new DuplicateTransactionException("This transfer has already been initiated. This is a duplicate transaction.");
+            }
+        }
+
+        //ensure sender matches current logged in user
+        accountGuard.requireOwned(sender.getId());
+
+        //ensure amount is correct
+        BigDecimal amount = request.amount();
+        accountGuard.requirePositive(amount);
+        accountGuard.requireSufficientFunds(senderAccount.getBalance(), amount);
+
+        //compute shared reference
+        String sharedRef = "EXT-TX-" + Instant.now().toEpochMilli();
+
+        //take funds from senderAccount
+        senderAccount.setBalance(senderAccount.getBalance().subtract(amount));
+
+        //retrieve contact information of the recipient
+        Contact recipient = contactRepository.findById(request.contactId())
+                .orElseThrow(() -> new NoSuchElementException("No contact was found with the following contact id: " + request.contactId()));
+
+        //persist transactions
+        ExternalTransfer out = new ExternalTransfer();
+        out.setAccount(senderAccount);
+        out.setType(Transaction.Type.TRANSFER_OUT);
+        out.setAmount(amount);
+        out.setReference(sharedRef);
+        out.setStatus(ExternalTransfer.Status.PENDING);
+        out.setMessage(request.message());
+        Instant expiresAt = out.getCreatedAt().plus(externalTransferExpiryDays, ChronoUnit.DAYS);
+        Instant reminderAt = out.getCreatedAt().plus(externalTransferExpiryDays, ChronoUnit.DAYS);
+        out.setExpiresAt(expiresAt); //change this is for testing
+        out.setReminderAt(reminderAt);
+        out.setSecurityQuestion(recipient.getSecurityQuestion());
+        out.setSecurityAnswerHash(recipient.getSecurityAnswerHash());
+        transactionRepository.save(out);
+
+
+        //variable to hold recipient name, will change depending on if they are a User of JJBank or not
+        String recipientName;
+
+        ExternalTransfer in = new ExternalTransfer();
+        //verify if contact is a JJBank user
+        Optional<Account> recipientAccount = accountRepository.findFirstByUserEmailOrderByCreatedAtAsc(recipient.getEmail());
+        if(recipientAccount.isPresent()) {
+            in.setAccount(recipientAccount.get());
+            recipientName = recipientAccount.get().getUser().getFullName();
+        } else {
+            //the recipient doesn't yet have an account, set to senderAccount for now,
+            //will have to delete the record for this ExternalTransfer if recipient never creates account
+            //must change it when user accepts the transfer with their new account
+            in.setAccount(senderAccount);
+            recipientName = recipient.getDisplayName();
+        }
+        in.setType(Transaction.Type.TRANSFER_IN);
+        in.setAmount(amount);
+        in.setReference(sharedRef);
+        in.setStatus(ExternalTransfer.Status.PENDING);
+        in.setMessage(request.message());
+        in.setExpiresAt(expiresAt);
+        in.setReminderAt(reminderAt);
+        in.setSecurityQuestion(recipient.getSecurityQuestion());
+        in.setSecurityAnswerHash(recipient.getSecurityAnswerHash());
+        transactionRepository.save(in);
+
+        //create and persist transfer token
+        TransferToken transferToken = new TransferToken();
+        transferToken.setIncomingTransfer(in);
+        transferToken.setRecipient(recipient);
+        HashUtil hashUtil = new HashUtil();
+        String transferTokenString = UUID.randomUUID().toString();
+        transferToken.setTokenHash(hashUtil.sha256(transferTokenString));
+        transferTokenRepository.save(transferToken);
+
+        //record idempotency after success
+        IdempotencyKey key = new IdempotencyKey();
+        key.setOwnerId(sender.getId());
+        key.setKeyValue(idemKey);
+        idempotencyKeyRepository.save(key);
+
+        //create transfer link with transfer token
+        String transferLinkPath = "/transfer/claim/" + transferTokenString;
+        String transferLink = frontEndBaseUrl + transferLinkPath;
+
+        //notify recipient
+        InstantToDateConverter dateConverter = new InstantToDateConverter(); //make it a member variable when you change for @Autowired constructor injection
+        eventPublisher.publishEvent(
+                new TransferInitiatedEvent(
+                        recipient.getEmail(),
+                        recipientName,
+                        dateConverter.toShortWeekdayLongDate(Instant.now()),
+                        amount.toPlainString(),
+                        sender.getFullName(),
+                        sharedRef,
+                        request.message(),
+                        transferLink
+                )
+        );
+    }
+
+    @Transactional
+    public ApiResult claimOrDeclineExternalTransfer(
+            String userEmail,
+            ClaimOrDeclineExternalTransferRequest request,
+            ClaimOrDeclineExternalTransferRequest.Decision decision,
+            String idemKey) {
+
+        //fetch transfer token from database
+        HashUtil hashUtil = new HashUtil();
+        TransferToken token = transferTokenRepository.findByTokenHash(hashUtil.sha256(request.transferToken()))
+                .orElseThrow(() -> new NoSuchElementException("The provided transfer token could not be found."));
+
+        //load recipient's account and user
+        ExternalTransfer incomingTransfer = token.getIncomingTransfer();
+        Account recipientAccount = this.getAccount(request.recipientAccountId());
+        User recipient = recipientAccount.getUser();
+
+        if(idemKey != null && !idemKey.isBlank()) {
+            if(idempotencyKeyRepository.existsByOwnerIdAndKeyValue(recipient.getId(), idemKey)) {
+                throw new DuplicateTransactionException("This transfer has already been processed. This is a duplicate transaction.");
+            }
+        }
+
+        //ensure that the User (recipient) owns the account in which they want to deposit
+        accountGuard.requireOwned(recipient.getId());
+
+        //verify token validity
+        if(token.isInvalid()) {
+            throw new AccessDeniedException("The transfer token is invalid.");
+        }
+
+        //verify that currently logged in userEmail matches recipient email
+        Contact recipientContact = token.getRecipient();
+        if(!userEmail.equals(recipientContact.getEmail())) {
+            throw new AccessDeniedException("You are not the recipient of the transfer.");
+        }
+
+        //get complementary external transfer before changing the account
+        ExternalTransfer outgoingTransfer = this.getComplementaryTransfer(
+                incomingTransfer.getReference(),
+                incomingTransfer.getAccount().getId(),
+                incomingTransfer.getId());
+
+        //verify security answer
+        if(incomingTransfer.getFailedSecurityAttempts() < 3) {
+            String securityAnswerHash = incomingTransfer.getSecurityAnswerHash();
+            String securityAnswerAttempt = request.securityAnswer();
+            PasswordEncoder encoder = new BCryptPasswordEncoder(12);
+            if(!encoder.matches(securityAnswerAttempt, securityAnswerHash)) {
+                int updatedFailedSecurityAttempts = incomingTransfer.getFailedSecurityAttempts() + 1;
+                incomingTransfer.setFailedSecurityAttempts(updatedFailedSecurityAttempts);
+                if(updatedFailedSecurityAttempts == 3) {
+                    //invalidate transfer token
+                    token.setInvalid(true);
+
+                    //update expiration Instant
+                    incomingTransfer.setExpiresAt(Instant.now());
+                    outgoingTransfer.setExpiresAt(Instant.now());
+                }
+                return new ApiResult(ApiResult.Status.FAILURE, 3 - updatedFailedSecurityAttempts + " attempts left");
+            }
+        } else {
+            throw new AccessDeniedException("Maximum failed security attempts reached.");
+        }
+
+        return switch (decision) {
+            case CLAIM -> this.claimExternalTransfer(
+                    recipient,
+                    recipientAccount,
+                    incomingTransfer,
+                    outgoingTransfer,
+                    token,
+                    idemKey);
+            case DECLINE -> this.declineExternalTransfer(
+                    recipient,
+                    recipientAccount,
+                    incomingTransfer,
+                    outgoingTransfer,
+                    token,
+                    idemKey);
+        };
+    }
+
+    private ApiResult claimExternalTransfer(
+            User recipient,
+            Account recipientAccount,
+            ExternalTransfer incomingTransfer,
+            ExternalTransfer outgoingTransfer,
+            TransferToken token,
+            String idemKey) {
+        //security challenge passed, now claim transfer
+        recipientAccount.setBalance(recipientAccount.getBalance().add(incomingTransfer.getAmount()));
+
+        //assign chosen account to incoming Transfer record
+        incomingTransfer.setAccount(recipientAccount);
+
+        //set both record as COMPLETED
+        Instant now = Instant.now();
+        incomingTransfer.setStatus(ExternalTransfer.Status.COMPLETED);
+        incomingTransfer.setCompletedAt(now);
+        outgoingTransfer.setStatus(ExternalTransfer.Status.COMPLETED);
+        outgoingTransfer.setCompletedAt(now);
+
+        //invalidate transfer token
+        token.setInvalid(true);
+
+        //record idempotency after success
+        IdempotencyKey key = new IdempotencyKey();
+        key.setOwnerId(recipient.getId());
+        key.setKeyValue(idemKey);
+        idempotencyKeyRepository.save(key);
+
+        //load sender's account
+        User sender = outgoingTransfer.getAccount().getUser();
+
+        //load other information required for email
+        String recipientEmail = recipient.getEmail();
+        String recipientFullName = recipient.getFullName();
+        InstantToDateConverter dateConverter = new InstantToDateConverter(); //make it a member variable when you change for @Autowired constructor injection
+        String date = dateConverter.toShortWeekdayLongDate(now);
+        String amount = incomingTransfer.getAmount().toPlainString();
+        String senderEmail = sender.getEmail();
+        String senderFullName = sender.getFullName();
+        String reference = incomingTransfer.getReference();
+        String message = incomingTransfer.getMessage();
+
+        //notify recipient
+        eventPublisher.publishEvent(new TransferCompletedEvent(
+                "recipient",
+                recipientEmail,
+                recipientFullName,
+                date,
+                amount,
+                senderFullName,
+                reference,
+                message)
+        );
+
+        //notify sender
+        eventPublisher.publishEvent(new TransferCompletedEvent(
+                "sender",
+                senderEmail,
+                recipientFullName,
+                date,
+                amount,
+                senderFullName,
+                reference,
+                message)
+        );
+        return new ApiResult(ApiResult.Status.SUCCESS, "Transfer claimed successfully.");
+    }
+
+    private ApiResult declineExternalTransfer(
+            User recipient,
+            Account recipientAccount,
+            ExternalTransfer incomingTransfer,
+            ExternalTransfer outgoingTransfer,
+            TransferToken token,
+            String idemKey
+    ) {
+        //security challenge passed, now decline transfer
+        //refund sender
+        Account senderAccount = outgoingTransfer.getAccount();
+        senderAccount.setBalance(senderAccount.getBalance().add(outgoingTransfer.getAmount()));
+
+        //assign chosen account to incoming Transfer record to link it to recipient
+        incomingTransfer.setAccount(recipientAccount);
+
+        //set both records as DECLINED
+        Instant now = Instant.now();
+        incomingTransfer.setStatus(ExternalTransfer.Status.DECLINED);
+        outgoingTransfer.setStatus(ExternalTransfer.Status.DECLINED);
+
+        //invalidate transfer token
+        token.setInvalid(true);
+
+        //record idempotency after success
+        IdempotencyKey key = new IdempotencyKey();
+        key.setOwnerId(recipient.getId());
+        key.setKeyValue(idemKey);
+        idempotencyKeyRepository.save(key);
+
+        //load sender's account
+        User sender = outgoingTransfer.getAccount().getUser();
+
+        //load other information required for email
+        String recipientFullName = recipient.getFullName();
+        InstantToDateConverter dateConverter = new InstantToDateConverter(); //make it a member variable when you change for @Autowired constructor injection
+        String date = dateConverter.toShortWeekdayLongDate(now);
+        String amount = incomingTransfer.getAmount().toPlainString();
+        String senderEmail = sender.getEmail();
+        String senderFullName = sender.getFullName();
+        String reference = incomingTransfer.getReference();
+
+        //notify sender
+        eventPublisher.publishEvent(new TransferDeclinedEvent(
+                senderEmail,
+                senderFullName,
+                date,
+                amount,
+                recipientFullName,
+                reference)
+        );
+        return new ApiResult(ApiResult.Status.SUCCESS, "Transfer declined successfully.");
+    }
+
+    @Transactional
+    public void cancelExternalTransfer(CancelExternalTransferRequest request, String idemKey) {
+
+        //load outgoing ExternalTransfer and sender's account and User
+        ExternalTransfer outgoingTransfer = (ExternalTransfer) transactionRepository.findById(request.outgoingTransferId())
+                .orElseThrow(() -> new NoSuchElementException(
+                        "No external transfer was found with the following id: " + request.outgoingTransferId())
+                );
+        Account senderAccount = outgoingTransfer.getAccount();
+        User sender = senderAccount.getUser();
+
+        if(idemKey != null && !idemKey.isBlank()) {
+            if(idempotencyKeyRepository.existsByOwnerIdAndKeyValue(sender.getId(), idemKey)) {
+                throw new DuplicateTransactionException("This transfer has already been cancelled. This is a duplicate transaction.");
+            }
+        }
+
+        //ensure sender matches currently logged in user
+        accountGuard.requireOwned(sender.getId());
+
+        //load incoming transfer
+        ExternalTransfer incomingTransfer = this.getComplementaryTransfer(
+                outgoingTransfer.getReference(),
+                outgoingTransfer.getAccount().getId(),
+                outgoingTransfer.getId());
+
+        //cancel the external transfers
+        outgoingTransfer.setStatus(ExternalTransfer.Status.CANCELLED);
+        incomingTransfer.setStatus(ExternalTransfer.Status.CANCELLED);
+
+        //get sender and recipient account IDs
+        UUID senderAccountId = senderAccount.getId();
+        UUID recipientAccountId = incomingTransfer.getAccount().getId();
+
+        //set up variable to hold recipient name and email
+        String recipientName;
+        String recipientEmail;
+
+        //get TransferToken
+        TransferToken token = transferTokenRepository.findByIncomingTransferId(incomingTransfer.getId())
+                .orElse(null);
+
+        if(token == null){
+            //the recipient is a User of JJBank, no transfer token created for a requested transfer
+
+            //get recipient User
+            User recipient = incomingTransfer.getAccount().getUser();
+
+            //set recipient name and email
+            recipientName = recipient.getFullName();
+            recipientEmail = recipient.getEmail();
+
+        } else {
+
+            //refund sender because funds have been taken when they initiated the transfer
+            senderAccount.setBalance(senderAccount.getBalance().add(outgoingTransfer.getAmount()));
+
+            if(senderAccountId.equals(recipientAccountId)) {
+                //the transfer was sent before the recipient had registered, delete their record of the transaction
+                //only need the record for the user who is a JJBank user
+                transferTokenRepository.delete(token);
+                transactionRepository.delete(incomingTransfer);
+
+                //set recipient name and email
+                recipientName = token.getRecipient().getDisplayName();
+                recipientEmail = token.getRecipient().getEmail();
+
+            } else {
+                //the recipient is a JJBank User, keep the record, invalidate token
+                token.setInvalid(true);
+
+                //get recipient User
+                User recipient = incomingTransfer.getAccount().getUser();
+
+                //set recipient name and email
+                recipientName = recipient.getFullName();
+                recipientEmail = recipient.getEmail();
+            }
+
+        }
+
+        //record idempotency after success
+        IdempotencyKey key = new IdempotencyKey();
+        key.setOwnerId(sender.getId());
+        key.setKeyValue(idemKey);
+        idempotencyKeyRepository.save(key);
+
+        //retrieve necessary information to email recipient
+        InstantToDateConverter dateConverter = new InstantToDateConverter();
+        String date = dateConverter.toShortWeekdayLongDate(Instant.now());
+        String amount = outgoingTransfer.getAmount().toPlainString();
+        String senderFullName = sender.getFullName();
+        String reference = outgoingTransfer.getReference();
+
+        //notify recipient
+        eventPublisher.publishEvent(new TransferCancelledEvent(
+                recipientEmail,
+                recipientName,
+                date,
+                amount,
+                senderFullName,
+                reference)
+        );
+    }
+
+    @Transactional
+    public void requestExternalTransfer(IncomingExternalTransferRequest request, String idemKey) {
+
+        //load recipient's account
+        Account recipientAccount = this.getAccount(request.recipientAccountId());
+        User recipient = recipientAccount.getUser();
+
+        if(idemKey != null && !idemKey.isBlank()) {
+            if(idempotencyKeyRepository.existsByOwnerIdAndKeyValue(recipient.getId(), idemKey)) {
+                throw new DuplicateTransactionException("This transfer has already been requested. This is a duplicate transaction.");
+            }
+        }
+
+        //ensure recipient is the currently logged-in user
+        accountGuard.requireOwned(recipient.getId());
+
+        //compute shared reference
+        String sharedRef = "EXT-TX-" + Instant.now().toEpochMilli();
+
+
+        //retrieve contact information of the sender
+        Contact senderContact = contactRepository.findById(request.contactId())
+                .orElseThrow(() -> new NoSuchElementException("No contact was found with the following contact id: " + request.contactId()));
+
+        //ensure sender is a JJBank User
+        Account senderAccount = accountRepository.findFirstByUserEmailOrderByCreatedAtAsc(senderContact.getEmail())
+                .orElseThrow(() -> new NoSuchElementException("No account was found for the following user email: " + senderContact.getEmail()));
+
+        User sender = senderAccount.getUser();
+
+        //ensure amount is correct
+        BigDecimal amount = request.amount();
+        accountGuard.requirePositive(amount);
+        accountGuard.requireSufficientFunds(senderAccount.getBalance(), amount);
+
+        //get request message
+        String message = request.message();
+
+        //persist transactions
+        ExternalTransfer in = new ExternalTransfer();
+        in.setAccount(recipientAccount);
+        in.setType(Transaction.Type.TRANSFER_IN);
+        in.setAmount(amount);
+        in.setReference(sharedRef);
+        in.setStatus(ExternalTransfer.Status.PENDING);
+        in.setMessage(message);
+        Instant expiresAt = in.getCreatedAt().plus(externalTransferExpiryDays, ChronoUnit.DAYS);
+        Instant reminderAt = in.getCreatedAt().plus(externalTransferExpiryDays, ChronoUnit.DAYS);
+        in.setExpiresAt(expiresAt);
+        in.setReminderAt(reminderAt);
+        transactionRepository.save(in);
+
+        ExternalTransfer out = new ExternalTransfer();
+        out.setAccount(senderAccount);
+        out.setType(Transaction.Type.TRANSFER_OUT);
+        out.setAmount(amount);
+        out.setReference(sharedRef);
+        out.setStatus(ExternalTransfer.Status.PENDING);
+        out.setMessage(message);
+        out.setExpiresAt(expiresAt);
+        out.setReminderAt(reminderAt);
+        transactionRepository.save(out);
+
+        //record idempotency after success
+        IdempotencyKey key = new IdempotencyKey();
+        key.setOwnerId(recipient.getId());
+        key.setKeyValue(idemKey);
+        idempotencyKeyRepository.save(key);
+
+        //create transfer link with transfer id
+        String transferLinkPath = "/transfer/requests/" + out.getId();
+        String transferLink = frontEndBaseUrl + transferLinkPath;
+
+        //notify sender
+        InstantToDateConverter dateConverter = new InstantToDateConverter(); //make it a member variable when you change for @Autowired constructor injection
+        eventPublisher.publishEvent(
+                new TransferRequestedEvent(
+                        sender.getEmail(),
+                        sender.getFullName(),
+                        dateConverter.toShortWeekdayLongDate(in.getCreatedAt()),
+                        amount.toPlainString(),
+                        recipient.getFullName(),
+                        sharedRef,
+                        message,
+                        transferLink
+                )
+        );
+    }
+
+    @Transactional
+    public void acceptExternalTransferRequest(AcceptExternalTransferRequest request, String idemKey) {
+
+        //load outgoing ExternalTransfer and sender's User
+        ExternalTransfer outgoingTransfer = (ExternalTransfer) transactionRepository.findById(request.outgoingTransferId())
+                .orElseThrow(() -> new NoSuchElementException(
+                        "No external transfer was found with the following id: " + request.outgoingTransferId())
+                );
+        User sender = outgoingTransfer.getAccount().getUser();
+
+        if(idemKey != null && !idemKey.isBlank()) {
+            if(idempotencyKeyRepository.existsByOwnerIdAndKeyValue(sender.getId(), idemKey)) {
+                throw new DuplicateTransactionException("This transfer has already been accepted. This is a duplicate transaction.");
+            }
+        }
+
+        //ensure sender matches currently logged-in user
+        accountGuard.requireOwned(sender.getId());
+
+        //load incoming transfer
+        ExternalTransfer incomingTransfer = this.getComplementaryTransfer(
+                outgoingTransfer.getReference(),
+                outgoingTransfer.getAccount().getId(),
+                outgoingTransfer.getId());
+
+        //get sender and recipient accounts
+        Account senderAccount = this.getAccount(request.senderAccountId()); //selected by sender
+        Account recipientAccount = incomingTransfer.getAccount();
+
+        //get recipient's User
+        User recipient = recipientAccount.getUser();
+
+        //take funds from sender's selected account
+        senderAccount.setBalance(senderAccount.getBalance().subtract(outgoingTransfer.getAmount()));
+
+        //assign sender's selected account to outgoing transfer
+        outgoingTransfer.setAccount(senderAccount);
+
+        //add funds to recipient's account
+        recipientAccount.setBalance(recipientAccount.getBalance().add(outgoingTransfer.getAmount()));
+
+        //set both records as COMPLETED
+        Instant now = Instant.now();
+        outgoingTransfer.setStatus(ExternalTransfer.Status.COMPLETED);
+        outgoingTransfer.setCompletedAt(now);
+        incomingTransfer.setStatus(ExternalTransfer.Status.COMPLETED);
+        incomingTransfer.setCompletedAt(now);
+
+        //record idempotency after success
+        IdempotencyKey key = new IdempotencyKey();
+        key.setOwnerId(sender.getId());
+        key.setKeyValue(idemKey);
+        idempotencyKeyRepository.save(key);
+
+        //load information required for emails
+        String recipientEmail = recipient.getEmail();
+        String recipientFullName = recipient.getFullName();
+        InstantToDateConverter dateConverter = new InstantToDateConverter();
+        String date = dateConverter.toShortWeekdayLongDate(now);
+        String amount = outgoingTransfer.getAmount().toPlainString();
+        String senderEmail = sender.getEmail();
+        String senderFullName = sender.getFullName();
+        String reference = outgoingTransfer.getReference();
+        String message = outgoingTransfer.getMessage();
+
+        //notify recipient
+        eventPublisher.publishEvent(new TransferCompletedEvent(
+                "recipient",
+                recipientEmail,
+                recipientFullName,
+                date,
+                amount,
+                senderFullName,
+                reference,
+                message)
+        );
+
+        //notify sender
+        eventPublisher.publishEvent(new TransferCompletedEvent(
+                "sender",
+                senderEmail,
+                recipientFullName,
+                date,
+                amount,
+                senderFullName,
+                reference,
+                message)
+        );
+    }
+
+    private ExternalTransfer getComplementaryTransfer(String reference, UUID accountId, UUID transactionId) {
+        List<Transaction> transactions = transactionRepository
+                .findByReferenceAndAccountIdNot(reference, accountId);
+
+        for(Transaction transaction : transactions) {
+            System.out.println(transaction.getType());
+            System.out.println(transaction.getId());
+        }
+
+        if(transactions.isEmpty()) {
+            //the transfer was sent before the recipient had registered with JJBank so the accountId is the same as the sender's
+            transactions = transactionRepository
+                    .findByReferenceAndAccountIdAndIdNot(reference, accountId, transactionId);
+
+            if(transactions.isEmpty()) {
+                throw new IllegalStateException("No complementary transfer found");
+            }
+        }
+
+        if(transactions.size() > 1) {
+            throw new IllegalStateException("Expected one complementary transfer but found multiple");
+        }
+
+        return (ExternalTransfer) transactions.getFirst();
     }
 
     private Account getAccount(UUID accountId) {

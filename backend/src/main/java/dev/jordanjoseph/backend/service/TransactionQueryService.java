@@ -1,13 +1,13 @@
 package dev.jordanjoseph.backend.service;
 
-import dev.jordanjoseph.backend.dto.transactionhistory.BasicTransactionView;
-import dev.jordanjoseph.backend.dto.transactionhistory.TransactionView;
-import dev.jordanjoseph.backend.dto.transactionhistory.TransferInTransactionView;
-import dev.jordanjoseph.backend.dto.transactionhistory.TransferOutTransactionView;
+import dev.jordanjoseph.backend.dto.transactionhistory.*;
+import dev.jordanjoseph.backend.model.Account;
+import dev.jordanjoseph.backend.model.ExternalTransfer;
 import dev.jordanjoseph.backend.model.Transaction;
 import dev.jordanjoseph.backend.repository.AccountRepository;
 import dev.jordanjoseph.backend.repository.TransactionRepository;
 import dev.jordanjoseph.backend.util.AccountGuard;
+import dev.jordanjoseph.backend.util.InstantToDateConverter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -31,7 +31,7 @@ public class TransactionQueryService {
     @Autowired
     private AccountGuard accountGuard;
 
-    public Page<TransactionView> listForAccount(
+    public Page<TransactionView> listCompletedTransactionsForAccount(
             UUID accountId,
             Transaction.Type type,
             Instant from,
@@ -39,60 +39,98 @@ public class TransactionQueryService {
             Pageable pageable) {
 
         //verify ownership
-        accountRepository.findById(accountId)
+        Account account = accountRepository.findById(accountId)
                 .orElseThrow(() -> new IllegalStateException("Account not found"));
-        accountGuard.requireOwned(accountId); //passes if admin, might want to rename method
+        UUID userId = account.getUser().getId();
+        accountGuard.requireOwned(userId); //passes if admin, might want to rename method
 
         //normalize time filters/params
         if(from == null) from = Instant.EPOCH; //1, Jan, 1970
         if(to == null) to = Instant.now();
 
-        Page<Transaction> page = null;
-        if(type == null) {
-            page = transactionRepository
-                    .findByAccountIdAndCreatedAtBetween(accountId, from, to, pageable);
-
-        } else {
-            page = transactionRepository
-                    .findByAccountIdAndTypeAndCreatedAtBetween(accountId, type, from, to ,pageable);
-        }
+        Page<Transaction> page = transactionRepository
+                .findAndFilterCompletedTransactions(accountId, type, from, to, pageable);
 
         return page.map(this::toView); //method reference, returns Page<TransactionView>
     }
 
     private TransactionView toView(Transaction t) {
+        return switch (t) {
+            case ExternalTransfer external -> completedExternalTransferToView(external);
+            case Transaction internal -> internalTransactionToView(internal);
+        };
+    }
+
+    private TransactionView internalTransactionToView(Transaction t) {
         return switch (t.getType()) {
             case DEPOSIT, WITHDRAW
                     -> new BasicTransactionView(
-                            t.getId(), t.getType(), t.getAmount(), t.getReference(), t.getCreatedAt());
-
-            case TRANSFER_IN -> {
-                Transaction sender = getComplementaryTransaction(t.getReference(), t.getAccount().getId());
-                yield new TransferInTransactionView(
                         t.getId(),
                         t.getType(),
                         t.getAmount(),
                         t.getReference(),
-                        t.getCreatedAt(),
-                        t.getAccount().getId(),
-                        t.getAccount().getUser().getFullName(),
-                        t.getAccount().getUser().getEmail(),
-                        sender.getAccount().getUser().getFullName());
+                        getDateFromInstant(t.getCreatedAt()));
+
+            case TRANSFER_IN -> {
+                Transaction sender = getComplementaryTransaction(t.getReference(), t.getAccount().getId());
+                yield new IncomingInternalTransferView(
+                        t.getType(),
+                        t.getAmount(),
+                        t.getReference(),
+                        getDateFromInstant(t.getCreatedAt()),
+                        sender.getAccount().getType(),
+                        sender.getAccount().getId());
             }
 
             case TRANSFER_OUT -> {
                 Transaction recipient = getComplementaryTransaction(t.getReference(), t.getAccount().getId());
-                yield new TransferOutTransactionView(
-                        t.getId(),
+                yield new OutgoingInternalTransferView(
                         t.getType(),
                         t.getAmount(),
                         t.getReference(),
-                        t.getCreatedAt(),
+                        getDateFromInstant(t.getCreatedAt()),
+                        recipient.getAccount().getType(),
+                        recipient.getAccount().getId());
+            }
+        };
+    }
+
+    private TransactionView completedExternalTransferToView(ExternalTransfer t) {
+        if(t.getStatus() != ExternalTransfer.Status.COMPLETED) {
+            throw new IllegalStateException("Unexpected 'Status' value for ExternalTransfer: " + t.getStatus());
+        }
+        return switch (t.getType()) {
+            case TRANSFER_IN -> {
+
+                Transaction sender = getComplementaryTransaction(t.getReference(), t.getAccount().getId());
+                yield new IncomingExternalTransferView(
+                        t.getType(),
+                        t.getAmount(),
+                        t.getReference(),
+                        getDateFromInstant(t.getCompletedAt()),
+                        t.getAccount().getType(),
                         t.getAccount().getId(),
                         t.getAccount().getUser().getFullName(),
                         t.getAccount().getUser().getEmail(),
-                        recipient.getAccount().getUser().getFullName());
+                        sender.getAccount().getUser().getFullName(),
+                        t.getStatus());
             }
+
+            case TRANSFER_OUT -> {
+                Transaction recipient = getComplementaryTransaction(t.getReference(), t.getAccount().getId());
+                yield new OutgoingExternalTransfer(
+                        t.getType(),
+                        t.getAmount(),
+                        t.getReference(),
+                        getDateFromInstant(t.getCompletedAt()),
+                        t.getAccount().getType(),
+                        t.getAccount().getId(),
+                        t.getAccount().getUser().getFullName(),
+                        recipient.getAccount().getUser().getEmail(),
+                        recipient.getAccount().getUser().getFullName(),
+                        t.getStatus());
+            }
+            default -> throw new IllegalStateException("Unexpected 'Type' value for ExternalTransfer: " + t.getType());
         };
     }
 
@@ -101,7 +139,7 @@ public class TransactionQueryService {
                 .findByReferenceAndAccountIdNot(reference, accountId);
 
         for(Transaction transaction : transactions) {
-            System.out.println(transaction.getType());
+            out.println(transaction.getType());
             out.println(transaction.getId());
         }
 
@@ -110,10 +148,15 @@ public class TransactionQueryService {
         }
 
         if(transactions.size() > 1) {
-            throw new IllegalStateException("Expected one complimentary transaction but found multiple");
+            throw new IllegalStateException("Expected one complementary transaction but found multiple");
         }
 
         return transactions.getFirst();
+    }
+
+    private String getDateFromInstant(Instant instant) {
+        InstantToDateConverter converter = new InstantToDateConverter();
+        return converter.toShortWeekdayLongDate(instant);
     }
 
 }

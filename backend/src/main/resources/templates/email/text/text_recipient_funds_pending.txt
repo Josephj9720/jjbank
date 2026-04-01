@@ -1,0 +1,15 @@
+Hello [[${recipient}]],
+
+[[${sender}]] has sent you funds. Please view the transaction to deposit your funds.
+      [# th:if="${message}"]
+      Message: [[${message}]][/]
+      Date: [[${date}]]
+      Amount: $[[${amount}]] (J)
+      From: [[${sender}]]
+      Reference: [[${reference}]]
+	
+	View Transaction: [[${link}]]
+
+If you didn't make this transaction, please contact support immediately.
+
+© 2026 JJBank

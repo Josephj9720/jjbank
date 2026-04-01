@@ -12,5 +12,5 @@ public record BasicTransactionView(
         Transaction.Type type,
         BigDecimal amount,
         String reference,
-        Instant createdAt
+        String date
 ) implements TransactionView {}

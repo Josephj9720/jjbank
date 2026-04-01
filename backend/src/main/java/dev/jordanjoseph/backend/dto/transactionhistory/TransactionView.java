@@ -10,10 +10,9 @@ import java.util.UUID;
  *  this way they will all be treated similarly through the interface TransactionView
  *  they can all be sent together as TransactionView DTOs
  * */
-public sealed interface TransactionView permits BasicTransactionView, TransferInTransactionView, TransferOutTransactionView {
-    UUID id();
+public sealed interface TransactionView permits BasicTransactionView, IncomingExternalTransferView, IncomingInternalTransferView, OutgoingExternalTransfer, OutgoingInternalTransferView {
     Transaction.Type type();
     BigDecimal amount();
     String reference();
-    Instant createdAt();
+    String date();
 }

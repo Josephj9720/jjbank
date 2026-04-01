@@ -1,0 +1,12 @@
+Hello [[${recipient}]],
+
+Your transfer from [[${sender}]] was cancelled.
+
+      Date: [[${date}]]
+      Amount: $[[${amount}]] (J)
+      Status: Cancelled
+      Reference: [[${reference}]]
+	
+If you didn't make this transaction, please contact support immediately.
+
+© 2026 JJBank

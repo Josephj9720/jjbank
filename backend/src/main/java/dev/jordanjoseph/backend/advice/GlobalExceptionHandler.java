@@ -1,6 +1,6 @@
 package dev.jordanjoseph.backend.advice;
 
-import dev.jordanjoseph.backend.exception.AccountLimitReachedException;
+import dev.jordanjoseph.backend.exception.BusinessException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -79,12 +79,13 @@ public class GlobalExceptionHandler {
         return body(HttpStatus.BAD_REQUEST, message, request);
     }
 
-    /** catches AccountLimitReachedExceptions thrown, returns HTTP Bad Request with the JSON body
-     * the error is triggered when a user tries to create an account when the limit per user has been reached
+    /** catches BusinessExceptions thrown, returns HTTP Bad Request with the JSON body
+     * the error is triggered when a request is valid and the system is functioning correctly,
+     * but the operation cannot be completed due to a business constraint
      */
-    @ExceptionHandler(AccountLimitReachedException.class)
+    @ExceptionHandler(BusinessException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public Map<String, Object> handleAccountLimitReachedException(AccountLimitReachedException e, HttpServletRequest request) {
+    public Map<String, Object> handleBusinessException(BusinessException e, HttpServletRequest request) {
         return body(HttpStatus.BAD_REQUEST, e.getMessage(), request);
     }
 
@@ -92,6 +93,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public Map<String, Object> handleOther(Exception e, HttpServletRequest request) {
+        System.out.println("Error: " + e.getMessage());
         return body(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error", request);
     }
 

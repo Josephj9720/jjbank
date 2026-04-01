@@ -1,0 +1,15 @@
+Hello [[${sender}]],
+
+[[${recipient}]] has sent you a transfer request for $[[${amount}]] (J).
+      [# th:if="${message}"]
+      Message: [[${message}]][/]
+      Date: [[${date}]]
+      Amount: $[[${amount}]] (J)
+      To: [[${recipient}]]
+      Reference: [[${reference}]]
+	
+	View Transaction: [[${link}]]
+
+If you do not recognize this request, you can safely decline it.
+
+© 2026 JJBank

@@ -44,7 +44,7 @@ jjbank/
 - [x] Initialize Spring Boot project & DB connection
 - [x] Implement user registration and authentication (JWT)
 - [x] Add account + transaction management
-- [ ] Setup SMTP service for register and transfer operations
+- [x] Setup SMTP service for register and transfer operations
 - [ ] Dockerize application
 - [ ] API docs with Swagger
 - [ ] Write integration tests
